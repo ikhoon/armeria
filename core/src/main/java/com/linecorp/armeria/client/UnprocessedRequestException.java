@@ -18,6 +18,8 @@ package com.linecorp.armeria.client;
 
 import javax.annotation.Nullable;
 
+import com.linecorp.armeria.common.Flags;
+
 /**
  * A {@link RuntimeException} raised when it is certain that a request has not been handled by a server and
  * thus can be retried safely. This exception is usually raised when a server sent an HTTP/2 GOAWAY frame with
@@ -50,5 +52,13 @@ public final class UnprocessedRequestException extends RuntimeException {
     protected UnprocessedRequestException(@Nullable String message, @Nullable Throwable cause,
                                      boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    @Override
+    public Throwable fillInStackTrace() {
+        if (Flags.verboseExceptions()) {
+            super.fillInStackTrace();
+        }
+        return this;
     }
 }
