@@ -7,7 +7,8 @@ matrix:
     - os: linux
       env: "_JAVA_OPTIONS=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts"
     - os: osx
-      env: "_JAVA_OPTIONS=-Djavax.net.ssl.trustStore=/Library/Java/Home/lib/security/cacerts"
+      osx_image: xcode10.2
+      env: "_JAVA_OPTIONS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts"
 branches:
   only:
   - master
