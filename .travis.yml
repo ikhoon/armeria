@@ -4,6 +4,7 @@ jdk:
 sudo: false
 os:
 - linux
+- osx
 branches:
   only:
   - master
