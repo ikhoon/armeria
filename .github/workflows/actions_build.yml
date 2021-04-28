@@ -7,7 +7,7 @@ on:
 
 jobs:
   build_on_linux:
-    runs-on: linux-self
+    runs-on: self-hosted
     timeout-minutes: 120
     strategy:
       fail-fast: false
