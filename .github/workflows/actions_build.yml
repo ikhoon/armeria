@@ -80,11 +80,7 @@ jobs:
       - uses: burrunan/gradle-cache-action@v1.10
         with:
           remote-build-cache-proxy-enabled: false
-          arguments: --no-daemon --stacktrace :core:test :grpc:test :thrift0.13:test :it:server:test
-          properties: |
-            noLint=true
-            noWeb=true
-          gradle-dependencies-cache-key: v1
+          arguments: --no-daemon --stacktrace :core:test :grpc:test :thrift0.13:test :it:server:test -PnoLine -PnoWeb
 
       - name: Collecting the test reports
         if: failure()
