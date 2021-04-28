@@ -84,6 +84,7 @@ jobs:
           properties: |
             noLint=true
             noWeb=true
+          gradle-dependencies-cache-key: ${{ matrix.os }}
 
       - name: Collecting the test reports
         if: failure()
