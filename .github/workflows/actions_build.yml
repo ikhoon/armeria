@@ -81,6 +81,7 @@ jobs:
         with:
           remote-build-cache-proxy-enabled: false
           arguments: --no-daemon --stacktrace :core:test :grpc:test :thrift0.13:test :it:server:test -PnoLine -PnoWeb
+          multi-cache-enabled: false
 
       - name: Collecting the test reports
         if: failure()
