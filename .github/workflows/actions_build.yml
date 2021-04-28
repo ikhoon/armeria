@@ -45,6 +45,8 @@ jobs:
           buildJdkVersion=15
           testJavaVersion=${{ matrix.java }}
           org.gradle.java.installations.paths=${{ steps.setup-jdk-15.outputs.path }},${{ steps.setup-jre.outputs.path }}
+        gradle-dependencies-cache-key: self-hosted@v1
+
 
     - if: ${{ matrix.coverage }}
       uses: codecov/codecov-action@v1
