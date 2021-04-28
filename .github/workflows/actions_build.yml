@@ -84,11 +84,12 @@ jobs:
           properties: |
             noLint=true
             noWeb=true
-          gradle-dependencies-cache-key: ${{ matrix.os }}
+          gradle-dependencies-cache-key: v1
 
       - name: Collecting the test reports
         if: failure()
         run: find . '(' -name 'hs_err_*.log' -or -path '*/build/reports/tests' ')' -exec tar rf "reports-${{ matrix.os }}.tar" {} ';'
+        shell: bash
 
       - name: Upload Artifact
         if: failure()
