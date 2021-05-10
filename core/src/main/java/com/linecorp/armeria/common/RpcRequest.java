@@ -25,6 +25,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * An RPC {@link Request}.
  */
@@ -42,7 +44,7 @@ public interface RpcRequest extends Request {
      */
     static RpcRequest of(Class<?> serviceType, String method, @Nullable Object parameter) {
         final List<Object> parameters = parameter == null ? SINGLE_NULL_PARAM
-                                                          : Collections.singletonList(parameter);
+                                                          : ImmutableList.of(parameter);
         return new DefaultRpcRequest(serviceType, method, parameters);
     }
 

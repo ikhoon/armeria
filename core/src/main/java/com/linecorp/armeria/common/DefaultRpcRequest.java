@@ -26,6 +26,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Default {@link RpcRequest} implementation.
@@ -54,7 +55,7 @@ final class DefaultRpcRequest implements RpcRequest {
 
     private static List<Object> copyParams(Iterable<?> params) {
         requireNonNull(params, "params");
-        if (params == SINGLE_NULL_PARAM) {
+        if (params == SINGLE_NULL_PARAM || params instanceof ImmutableList) {
             //noinspection unchecked
             return (List<Object>) params;
         }
