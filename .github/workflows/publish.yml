@@ -44,7 +44,7 @@ jobs:
           ./gradlew --no-daemon --stacktrace --max-workers=1 publish closeAndReleaseStagingRepository \
           -PossrhUsername=${{ secrets.OSSRH_USER_NAME }} \
           -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} \
-          -Psigning.keyId=${{ steps.import_gpg.outputs.keyid }} \
+          -Psigning.keyId=${{ secrets.GPG_KEY_ID }} \
           -Psigning.password=${{ secrets.GPG_PASSWORD }} \
           -Psigning.gpgPrivateKey=${{ secrets.GPG_PRIVATE_KEY }}
 
