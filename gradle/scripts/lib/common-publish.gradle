@@ -6,6 +6,7 @@ def publishUrlForRelease = rootProject.findProperty('publishUrlForRelease')
 def publishUrlForSnapshot = rootProject.findProperty('publishUrlForSnapshot')
 def publishUsernameProperty = rootProject.findProperty('publishUsernameProperty')
 def publishPasswordProperty = rootProject.findProperty('publishPasswordProperty')
+def gpgKeyId = rootProject.findProperty("gpgKeyId")
 def gpgSecretKey = rootProject.findProperty("gpgPrivateKey")
 def gpgPassword = rootProject.findProperty("gpgPassword")
 
@@ -66,7 +67,7 @@ configure(projectsWithFlags('publish')) {
 
         signing {
             if (gpgSecretKey != null) {
-                useInMemoryPgpKeys(gpgSecretKey, gpgPassword)
+                useInMemoryPgpKeys(gpgKeyId, gpgSecretKey, gpgPassword)
             }
             required { true }
         }
