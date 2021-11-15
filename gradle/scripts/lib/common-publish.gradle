@@ -66,6 +66,7 @@ configure(projectsWithFlags('publish')) {
         apply plugin: 'signing'
 
         signing {
+            useGpgCmd()
             if (gpgSecretKey != null) {
                 useInMemoryPgpKeys(gpgKeyId, gpgSecretKey, gpgPassword)
             }

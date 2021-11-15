@@ -125,7 +125,7 @@ configure(projectsWithFlags('publish')) {
 
     if (project.ext.isSigning()) {
         signing {
-
+            useGpgCmd()
             def gpgKeyId = rootProject.findProperty("gpgKeyId")
             def gpgSecretKey = rootProject.findProperty("gpgPrivateKey")
             def gpgPassword = rootProject.findProperty("gpgPassword")

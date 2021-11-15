@@ -41,7 +41,7 @@ jobs:
 
       - name: Publish and close repository
         run: |
-          ./gradlew --no-daemon --stacktrace --max-workers=1 publish closeAndReleaseStagingRepository \
+          ./gradlew --no-daemon --stacktrace --info --max-workers=1 publish closeAndReleaseStagingRepository \
           -PossrhUsername=${{ secrets.OSSRH_USER_NAME }} \
           -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} \
           -Psigning.keyId=${{ secrets.GPG_KEY_ID }} \
