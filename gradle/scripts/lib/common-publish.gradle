@@ -6,16 +6,20 @@ def publishUrlForRelease = rootProject.findProperty('publishUrlForRelease')
 def publishUrlForSnapshot = rootProject.findProperty('publishUrlForSnapshot')
 def publishUsernameProperty = rootProject.findProperty('publishUsernameProperty')
 def publishPasswordProperty = rootProject.findProperty('publishPasswordProperty')
+def gpgSecretKey = rootProject.findProperty("gpgPrivateKey")
+def gpgPassword = rootProject.findProperty("gpgPassword")
 
 if (publishSignatureRequired) {
     apply plugin: 'signing'
 }
 
 rootProject.ext {
-    isPublishing = { gradle.taskGraph.allTasks.find { it.name =~ /(?:^|:)publish[^:]*ToMaven[^:]*$/ } != null }
+    isPublishing = { gradle.taskGraph.allTasks.find {
+        it.name =~ /(?:^|:)publish[^:]*ToSonatype[^:]*$/ } != null
+    }
     if (publishSignatureRequired) {
         isSigning = {
-            rootProject.signing.signatory != null &&
+            (rootProject.signing.signatory != null || gpgSecretKey != null) &&
             (isReleaseVersion || rootProject.hasProperty('sign'))
         }
     } else {
@@ -25,9 +29,8 @@ rootProject.ext {
     if (publishSignatureRequired) {
         gradle.taskGraph.whenReady {
             // Do *NOT* proceed if a user is publishing a release version and signatory is missing.
-            if (rootProject.ext.isPublishing() &&
-                isReleaseVersion &&
-                rootProject.signing.signatory == null) {
+            if (rootProject.ext.isPublishing() && isReleaseVersion &&
+                rootProject.signing.signatory == null && gpgSecretKey == null) {
 
                 throw new IllegalStateException(
                         'Cannot publish a release version without a GPG key; missing signatory. ' +
@@ -44,6 +47,16 @@ subprojects {
     }
 }
 
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri(publishUrlForRelease - "staging/deploy/maven2/"))
+            snapshotRepositoryUrl.set(uri(publishUrlForSnapshot))
+            username = project.findProperty(publishUsernameProperty)
+            password =  project.findProperty(publishPasswordProperty)
+        }
+    }
+}
 
 configure(projectsWithFlags('publish')) {
     apply plugin: 'maven-publish'
@@ -52,26 +65,10 @@ configure(projectsWithFlags('publish')) {
         apply plugin: 'signing'
 
         signing {
-            required { true }
-        }
-    }
-
-    publishing {
-        repositories {
-            maven {
-                if (project.hasProperty('publishUrl')) {
-                    url project.findProperty('publishUrl')
-                } else if (isReleaseVersion) {
-                    url publishUrlForRelease
-                } else {
-                    url publishUrlForSnapshot
-                }
-
-                credentials {
-                    username = project.findProperty(publishUsernameProperty)
-                    password = project.findProperty(publishPasswordProperty)
-                }
+            if (gpgSecretKey != null) {
+                useInMemoryPgpKeys(gpgSecretKey, gpgPassword)
             }
+            required { true }
         }
     }
 
