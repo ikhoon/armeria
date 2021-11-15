@@ -46,7 +46,7 @@ jobs:
           -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} \
           -Psigning.keyId=${{ steps.import_gpg.outputs.keyid }} \
           -Psigning.password=${{ secrets.GPG_PASSWORD }} \
-          -Psigning.secretKeyRingFile=/home/runner/.gnupg/trustdb.gpg
+          -Psigning.gpgPrivateKey=${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Clean up Gradle cache
         run: |
