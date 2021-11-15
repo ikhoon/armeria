@@ -12,6 +12,8 @@ plugins {
     id 'net.ltgt.errorprone' version '2.0.2' apply false
 }
 
+apply plugin: 'signing'
+
 allprojects {
     repositories {
         mavenCentral()
