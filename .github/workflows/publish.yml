@@ -44,9 +44,9 @@ jobs:
           ./gradlew --no-daemon --stacktrace --max-workers=1 publish closeAndReleaseStagingRepository \
           -PossrhUsername=${{ secrets.OSSRH_USER_NAME }} \
           -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} \
-          -PgpgKeyId=${{ secrets.GPG_KEY_ID }} \
-          -PgpgPrivateKey=${{ secrets.GPG_PRIVATE_KEY }} \
-          -PgpgPassword=${{ secrets.GPG_PASSWORD }}
+          -Psigning.keyId=${{ steps.import_gpg.outputs.keyid }} \
+          -Psigning.password=${{ secrets.GPG_PASSWORD }}
+          -Psigning.secretKeyRingFile=/home/runner/.gnupg/trustdb.gpg
 
       - name: Clean up Gradle cache
         run: |
