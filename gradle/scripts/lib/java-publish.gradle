@@ -123,19 +123,18 @@ configure(projectsWithFlags('publish')) {
         }
     }
 
-    if (project.ext.isSigning()) {
-        signing {
-            useGpgCmd()
-            def gpgKeyId = rootProject.findProperty("gpgKeyId")
-            def gpgSecretKey = rootProject.findProperty("gpgPrivateKey")
-            def gpgPassword = rootProject.findProperty("gpgPassword")
+    apply plugin: 'signing'
 
-            if (gpgSecretKey != null) {
-                useInMemoryPgpKeys(gpgKeyId, gpgSecretKey, gpgPassword)
-            }
+    signing {
+        def gpgKeyId = rootProject.findProperty("gpgKeyId")
+        def gpgSecretKey = rootProject.findProperty("gpgPrivateKey")
+        def gpgPassword = rootProject.findProperty("gpgPassword")
 
-            sign publishing.publications
+        if (gpgSecretKey != null) {
+            useInMemoryPgpKeys(gpgKeyId, gpgSecretKey, gpgPassword)
         }
+
+        sign publishing.publications
     }
 
     // For now, disable Gradle metadata generation until verifying it is correctly generated.
