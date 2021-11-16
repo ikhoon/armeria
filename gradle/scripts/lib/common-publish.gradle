@@ -6,8 +6,10 @@ def publishUrlForRelease = rootProject.findProperty('publishUrlForRelease')
 def publishUrlForSnapshot = rootProject.findProperty('publishUrlForSnapshot')
 def publishUsernameProperty = rootProject.findProperty('publishUsernameProperty')
 def publishPasswordProperty = rootProject.findProperty('publishPasswordProperty')
-def gpgSecretKey = rootProject.findProperty("gpgPrivateKey")
-def gpgPassword = rootProject.findProperty("gpgPassword")
+
+def signingKeyId = rootProject.findProperty("signingKeyId")
+def signingKey = rootProject.findProperty("signingKey")
+def signingPassword = rootProject.findProperty("signingPassword")
 
 if (publishSignatureRequired) {
     apply plugin: 'signing'
@@ -19,7 +21,7 @@ rootProject.ext {
     }
     if (publishSignatureRequired) {
         isSigning = {
-            (rootProject.signing.signatory != null || gpgSecretKey != null) &&
+            (rootProject.signing.signatory != null || signingKey != null) &&
             (isReleaseVersion || rootProject.hasProperty('sign'))
         }
     } else {
@@ -30,7 +32,7 @@ rootProject.ext {
         gradle.taskGraph.whenReady {
             // Do *NOT* proceed if a user is publishing a release version and signatory is missing.
             if (rootProject.ext.isPublishing() && isReleaseVersion &&
-                rootProject.signing.signatory == null && gpgSecretKey == null) {
+                rootProject.signing.signatory == null && signingKey == null) {
 
                 throw new IllegalStateException(
                         'Cannot publish a release version without a GPG key; missing signatory. ' +
@@ -65,8 +67,8 @@ configure(projectsWithFlags('publish')) {
         apply plugin: 'signing'
 
         signing {
-            if (gpgSecretKey != null) {
-                useInMemoryPgpKeys(gpgSecretKey, gpgPassword)
+            if (System.getenv("CI") != null && signingKey != null) {
+                useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
             }
             required { true }
         }
