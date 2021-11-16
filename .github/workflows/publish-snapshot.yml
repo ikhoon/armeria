@@ -14,7 +14,7 @@ concurrency:
 jobs:
   publish:
     name: Publish snaphosts
-    if: github.repository == 'ikhoon/armeria'
+    if: github.repository == 'line/armeria'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
