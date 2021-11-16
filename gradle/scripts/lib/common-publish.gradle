@@ -10,22 +10,40 @@ def gpgKeyId = rootProject.findProperty("gpgKeyId")
 def gpgSecretKey = rootProject.findProperty("gpgPrivateKey")
 def gpgPassword = rootProject.findProperty("gpgPassword")
 
-apply plugin: 'io.github.gradle-nexus.publish-plugin'
-
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri(publishUrlForRelease - "staging/deploy/maven2/"))
-            snapshotRepositoryUrl.set(uri(publishUrlForSnapshot))
-            username = project.findProperty(publishUsernameProperty)
-            password =  project.findProperty(publishPasswordProperty)
-        }
-    }
-}
+//apply plugin: 'io.github.gradle-nexus.publish-plugin'
+//
+//nexusPublishing {
+//    repositories {
+//        sonatype {
+//            nexusUrl.set(uri(publishUrlForRelease - "staging/deploy/maven2/"))
+//            snapshotRepositoryUrl.set(uri(publishUrlForSnapshot))
+//            username = project.findProperty(publishUsernameProperty)
+//            password =  project.findProperty(publishPasswordProperty)
+//        }
+//    }
+//}
 
 configure(projectsWithFlags('publish')) {
     apply plugin: 'maven-publish'
 
+    publishing {
+        repositories {
+            maven {
+                if (project.hasProperty('publishUrl')) {
+                    url project.findProperty('publishUrl')
+                } else if (isReleaseVersion) {
+                    url publishUrlForRelease
+                } else {
+                    url publishUrlForSnapshot
+                }
+
+                credentials {
+                    username = project.findProperty(publishUsernameProperty)
+                    password = project.findProperty(publishPasswordProperty)
+                }
+            }
+        }
+    }
 
     task install(
             group: 'Publishing',
