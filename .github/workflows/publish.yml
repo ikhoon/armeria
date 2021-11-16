@@ -10,7 +10,7 @@ jobs:
     name: Publish artifacts
     # TODO(ikhoon): Fix me
     if: github.repository == 'ikhoon/armeria'
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
 
