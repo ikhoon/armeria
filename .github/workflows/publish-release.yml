@@ -1,4 +1,4 @@
-name: Publish artifacts to Maven Central repository
+name: Publish final artifacts to Maven Central repository
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish:
-    name: Publish artifacts
+    name: Publish final artifacts
     # TODO(ikhoon): Fix me
     if: github.repository == 'ikhoon/armeria'
     runs-on: ubuntu-latest
