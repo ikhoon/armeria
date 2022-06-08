@@ -50,7 +50,10 @@ gradle.buildFinished({ result ->
             String detail = it.detail
             List<String> lines = detail.split("\n") as List
             def summary = lines.take(8)
-            writer.write("- $it.method\n")
+            def ghIssueTitle = URLEncoder.encode("Test failure: `$it.method`", "UTF-8")
+            def ghIssueBody = URLEncoder.encode("```\n$detail\n```", "UTF-8")
+            def ghIssueLink = "https://github.com/line/armeria/issues/new?title=$ghIssueTitle&body=$ghIssueBody"
+            writer.write("- $it.method [Reigister as an issue]($ghIssueLink)\n")
             writer.write("  ```\n")
             summary.each { line -> writer.write("  $line\n") }
             writer.write("  ```\n")
