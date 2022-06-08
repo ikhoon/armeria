@@ -46,7 +46,7 @@ gradle.buildFinished({ result ->
     if (!failedTests.isEmpty()) {
         // failedTests will be collected only in the CI environment.
         FileWriter writer = new FileWriter(new File("$rootDir/summarized-failed-tests.txt"), false)
-        testResults.each { it ->
+        failedTests.each { it ->
             String detail = it.detail
             List<String> lines = detail.split("\n") as List
             def summary = lines.take(8)
@@ -127,7 +127,7 @@ allprojects {
                     return
                 }
 
-                if (rootProject.ext.testsResults.size() > 20) {
+                if (rootProject.ext.failedTests.size() > 20) {
                     // Collect up to 20 error results
                     return
                 }
@@ -136,7 +136,7 @@ allprojects {
                 Elements failedTests = Jsoup.parse(indexFile, 'UTF-8').body().select("ul.linkList li")
                 println "## desc: $desc"
                 failedTests.each { Element failedTest ->
-                    if (rootProject.ext.testsResults.size() > 20) {
+                    if (rootProject.ext.failedTests.size() > 20) {
                         // Collect up to 20 error results
                         return
                     }
@@ -146,7 +146,7 @@ allprojects {
                     Path detailFile = indexFile.toPath().getParent().resolve(detailReportLink)
                     Document detailHtml = Jsoup.parse(detailFile.toFile(), 'UTF-8')
                     String detail = detailHtml.selectFirst("a[name=$methodName]").parent().selectFirst("span.code pre").text()
-                    rootProject.ext.testsResults += [method: "$className.$methodName", detail: detail]
+                    rootProject.ext.failedTests += [method: "$className.$methodName", detail: detail]
                 }
                 return
             }
