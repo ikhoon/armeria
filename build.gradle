@@ -1,4 +1,16 @@
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
+
+import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
+
+buildscript {
+    dependencies {
+        classpath 'org.jsoup:jsoup:1.14.3'
+    }
+}
 
 plugins {
     id 'com.google.osdetector' version '1.6.2' apply false
@@ -10,6 +22,7 @@ plugins {
     id 'org.jlleitschuh.gradle.ktlint' version '10.1.0' apply false
 
     id 'net.ltgt.errorprone' version '2.0.2' apply false
+    id 'test-report-aggregation'
 }
 
 allprojects {
@@ -21,6 +34,7 @@ allprojects {
 ext {
     // Set the artifactId of 'armeria-core' to 'armeria'.
     artifactIdOverrides = [':core': rootProject.name]
+    failedTests = []
 }
 
 apply from: "${rootDir}/gradle/scripts/build-flags.gradle"
@@ -28,6 +42,27 @@ apply from: "${rootDir}/gradle/scripts/build-flags.gradle"
 // Fail the build if the console contains 'LEAK:'.
 def hasLeak = new AtomicBoolean()
 gradle.buildFinished({ result ->
+    def failedTests = rootProject.ext.failedTests
+    if (!failedTests.isEmpty()) {
+        // failedTests will be collected only in the CI environment.
+        FileWriter writer = new FileWriter(new File("$rootDir/summarized-failed-tests.txt"), false)
+        testResults.each { it ->
+            String detail = it.detail
+            List<String> lines = detail.split("\n") as List
+            def summary = lines.take(8)
+            writer.write("- $it.method\n")
+            writer.write("  ```\n")
+            summary.each { line -> writer.write("  $line\n") }
+            writer.write("  ```\n")
+            if (lines.size() > 8) {
+                writer.write("  <details><summary>Full error messages</summary>\n")
+                writer.write("  <pre>\n")
+                lines.each { line -> writer.write("  $line\n") }
+                writer.write("  </pre></details>\n")
+            }
+        }
+    }
+
     if (hasLeak.get()) {
         throw new TestExecutionException('Found a leak while testing. ' +
                 "Specify '-Pleak' option to record the detail and " +
@@ -51,7 +86,7 @@ allprojects {
         }
     }
 
-    tasks.withType(Test) {
+    tasks.withType(Test) { testTask ->
         // Do not omit stack frames for easier tracking.
         jvmArgs '-XX:-OmitStackTraceInFastThrow'
 
@@ -82,6 +117,39 @@ allprojects {
                     hasLeak.set(true)
                 }
             })
+        }
+
+        if (System.getenv('CI') != null) {
+            // Collect failed test reports to display in GitHub Actions summary
+            afterSuite { desc, result ->
+                if (desc.parent) {
+                    // Only summarize results for whole modules
+                    return
+                }
+
+                if (rootProject.ext.testsResults.size() > 20) {
+                    // Collect up to 20 error results
+                    return
+                }
+
+                def indexFile = testTask.reports.html.entryPoint
+                Elements failedTests = Jsoup.parse(indexFile, 'UTF-8').body().select("ul.linkList li")
+                println "## desc: $desc"
+                failedTests.each { Element failedTest ->
+                    if (rootProject.ext.testsResults.size() > 20) {
+                        // Collect up to 20 error results
+                        return
+                    }
+                    String detailReportLink = failedTest.child(0).attr("href")
+                    String className = detailReportLink.replace("classes/", "").replace(".html", "")
+                    String methodName = failedTest.child(1).text()
+                    Path detailFile = indexFile.toPath().getParent().resolve(detailReportLink)
+                    Document detailHtml = Jsoup.parse(detailFile.toFile(), 'UTF-8')
+                    String detail = detailHtml.selectFirst("a[name=$methodName]").parent().selectFirst("span.code pre").text()
+                    rootProject.ext.testsResults += [method: "$className.$methodName", detail: detail]
+                }
+                return
+            }
         }
     }
 }

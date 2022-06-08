@@ -139,6 +139,15 @@ jobs:
       run: find . '(' -name 'java_pid*.hprof' -or -name 'hs_err_*.log' -or -path '*/build/reports/tests' -or -path '*/build/test-results' ')' -exec tar rf "reports-JVM-${{ matrix.java }}.tar" {} ';'
       shell: bash
 
+    - name: Summarize the failed tests
+      if: failure()
+      run: |
+        if test -f "summarized-failed-tests.txt"; then
+          echo '### 🔴 Failed tests\n' > $GITHUB_STEP_SUMMARY
+          cat summarized-failed-tests.txt >> $GITHUB_STEP_SUMMARY
+        fi
+      shell: bash
+
     - name: Upload the artifacts
       if: failure()
       uses: actions/upload-artifact@v2
