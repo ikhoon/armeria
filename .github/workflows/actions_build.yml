@@ -143,29 +143,29 @@ jobs:
           rm -fr ~/.gradle/caches/transforms-* || true
           rm -f ~/.gradle/caches/*/*.lock || true
           rm -f ~/.gradle/caches/*/gc.properties || true
-      shell: bash
+        shell: bash
 
-    - name: Dump stuck threads
-      if: always()
-      run: jps | grep -vi "jps" | awk '{ print $1 }' | xargs -I'{}' jstack -l {} || true
-      shell: bash
+      - name: Dump stuck threads
+        if: always()
+        run: jps | grep -vi "jps" | awk '{ print $1 }' | xargs -I'{}' jstack -l {} || true
+        shell: bash
 
-    - name: Upload the coverage report to Codecov
-      if: ${{ matrix.coverage }}
-      uses: codecov/codecov-action@v1
+      - name: Upload the coverage report to Codecov
+        if: ${{ matrix.coverage }}
+        uses: codecov/codecov-action@v1
 
-    - name: Collect the test reports
-      if: failure()
-      run: find . '(' -name 'java_pid*.hprof' -or -name 'hs_err_*.log' -or -path '*/build/reports/tests' -or -path '*/build/test-results' ')' -exec tar rf "reports-JVM-${{ matrix.java }}.tar" {} ';'
-      shell: bash
+      - name: Collect the test reports
+        if: failure()
+        run: find . '(' -name 'java_pid*.hprof' -or -name 'hs_err_*.log' -or -path '*/build/reports/tests' -or -path '*/build/test-results' ')' -exec tar rf "reports-JVM-${{ matrix.java }}.tar" {} ';'
+        shell: bash
 
-    - name: Upload the artifacts
-      if: failure()
-      uses: actions/upload-artifact@v2
-      with:
-        name: reports-JVM-${{ matrix.java }}
-        path: reports-JVM-${{ matrix.java }}.tar
-        retention-days: 3
+      - name: Upload the artifacts
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: reports-JVM-${{ matrix.java }}
+          path: reports-JVM-${{ matrix.java }}.tar
+          retention-days: 3
 
   lint:
     if: github.repository == 'line/armeria'
