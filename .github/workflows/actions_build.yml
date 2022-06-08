@@ -18,8 +18,20 @@ env:
   LC_ALL: "en_US.UTF-8"
 
 jobs:
+  summary:
+    runs-on: ubuntu-latest
+    steps:
+     - uses: LouisBrunner/checks-action@v1.2.0
+       name: Build summary
+       if: always()
+       with:
+         token: ${{ secrets.GITHUB_TOKEN }}
+         name: Build summary
+         conclusion: ${{ job.status }}
+         details_url: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
+
   build:
-    if: github.repository == 'line/armeria'
+#    if: github.repository == 'line/armeria'
     runs-on: ${{ matrix.on }}
     timeout-minutes: 80
     strategy:
@@ -46,15 +58,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - uses: LouisBrunner/checks-action@v1.2.0
-        name: Build summary
-        if: always()
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: Build summary
-          conclusion: ${{ job.status }}
-          details_url: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
 
       - id: setup-jdk
         if: ${{ matrix.java != 17 }}
@@ -195,7 +198,7 @@ jobs:
         shell: bash
 
   site:
-    if: github.repository == 'line/armeria'
+#    if: github.repository == 'line/armeria'
     # ubuntu-latest is preferred for site job.
     # node_modules need complicated dependencies that are difficult to install on self-hosted runners.
     runs-on: ubuntu-latest
