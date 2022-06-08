@@ -22,7 +22,6 @@ plugins {
     id 'org.jlleitschuh.gradle.ktlint' version '10.1.0' apply false
 
     id 'net.ltgt.errorprone' version '2.0.2' apply false
-    id 'test-report-aggregation'
 }
 
 allprojects {
@@ -34,7 +33,6 @@ allprojects {
 ext {
     // Set the artifactId of 'armeria-core' to 'armeria'.
     artifactIdOverrides = [':core': rootProject.name]
-    failedTests = []
 }
 
 apply from: "${rootDir}/gradle/scripts/build-flags.gradle"
@@ -42,29 +40,6 @@ apply from: "${rootDir}/gradle/scripts/build-flags.gradle"
 // Fail the build if the console contains 'LEAK:'.
 def hasLeak = new AtomicBoolean()
 gradle.buildFinished({ result ->
-    def failedTests = rootProject.ext.failedTests
-    if (!failedTests.isEmpty()) {
-        // failedTests will be collected only in the CI environment.
-        FileWriter writer = new FileWriter(new File("$rootDir/summarized-failed-tests.txt"), false)
-        failedTests.each { it ->
-            String detail = it.detail
-            List<String> lines = detail.split("\n") as List
-            def summary = lines.take(8)
-            def ghIssueTitle = URLEncoder.encode("Test failure: `$it.method`", "UTF-8")
-            def ghIssueBody = URLEncoder.encode("```\n$detail\n```", "UTF-8")
-            def ghIssueLink = "https://github.com/line/armeria/issues/new?title=$ghIssueTitle&body=$ghIssueBody"
-            writer.write("- $it.method [Reigister as an issue]($ghIssueLink)\n")
-            writer.write("  ```\n")
-            summary.each { line -> writer.write("  $line\n") }
-            writer.write("  ```\n")
-            if (lines.size() > 8) {
-                writer.write("  <details><summary>Full error messages</summary>\n")
-                writer.write("  <pre>\n")
-                lines.each { line -> writer.write("  $line\n") }
-                writer.write("  </pre></details>\n")
-            }
-        }
-    }
 
     if (hasLeak.get()) {
         throw new TestExecutionException('Found a leak while testing. ' +
@@ -89,7 +64,7 @@ allprojects {
         }
     }
 
-    tasks.withType(Test) { testTask ->
+    tasks.withType(Test) {
         // Do not omit stack frames for easier tracking.
         jvmArgs '-XX:-OmitStackTraceInFastThrow'
 
@@ -120,39 +95,6 @@ allprojects {
                     hasLeak.set(true)
                 }
             })
-        }
-
-        if (System.getenv('CI') != null) {
-            // Collect failed test reports to display in GitHub Actions summary
-            afterSuite { desc, result ->
-                if (desc.parent) {
-                    // Only summarize results for whole modules
-                    return
-                }
-
-                if (rootProject.ext.failedTests.size() > 20) {
-                    // Collect up to 20 error results
-                    return
-                }
-
-                def indexFile = testTask.reports.html.entryPoint
-                Elements failedTests = Jsoup.parse(indexFile, 'UTF-8').body().select("ul.linkList li")
-                println "## desc: $desc"
-                failedTests.each { Element failedTest ->
-                    if (rootProject.ext.failedTests.size() > 20) {
-                        // Collect up to 20 error results
-                        return
-                    }
-                    String detailReportLink = failedTest.child(0).attr("href")
-                    String className = detailReportLink.replace("classes/", "").replace(".html", "")
-                    String methodName = failedTest.child(1).text()
-                    Path detailFile = indexFile.toPath().getParent().resolve(detailReportLink)
-                    Document detailHtml = Jsoup.parse(detailFile.toFile(), 'UTF-8')
-                    String detail = detailHtml.selectFirst("a[name=$methodName]").parent().selectFirst("span.code pre").text()
-                    rootProject.ext.failedTests += [method: "$className.$methodName", detail: detail]
-                }
-                return
-            }
         }
     }
 }
@@ -294,5 +236,71 @@ allprojects {
 tasks.closeAndReleaseStagingRepository.doFirst {
     if (JavaVersion.current() != JavaVersion.VERSION_17) {
         throw new IllegalStateException("You must release using JDK 17.");
+    }
+}
+
+task summarizeFailedTests(type: TestsSummaryTask)
+
+class TestsSummaryTask extends DefaultTask {
+    @OutputFile
+    final def testSummaryFile = project.file("${project.buildDir}/failed-tests-summary.txt")
+
+    @TaskAction
+    def run() {
+        // Collect up to 20 error results
+        int maxErrorSize = 20
+        def entryPoints = []
+        def failedTests = []
+        project.allprojects {
+            tasks.withType(Test) { testTask ->
+                entryPoints << testTask.reports.html.entryPoint
+                println(testTask.reports.html.entryPoint)
+
+                def indexFile = testTask.reports.html.entryPoint
+                if (!indexFile.exists()) {
+                    return
+                }
+                Elements dom = Jsoup.parse(indexFile, 'UTF-8').body().select("ul.linkList li")
+                dom.each { Element failedTest ->
+                    if (failedTests.size() > maxErrorSize) {
+                        return
+                    }
+                    String detailReportLink = failedTest.child(0).attr("href")
+                    String className = detailReportLink.replace("classes/", "").replace(".html", "")
+                    String methodName = failedTest.child(1).text()
+                    Path detailFile = indexFile.toPath().getParent().resolve(detailReportLink)
+                    Document detailHtml = Jsoup.parse(detailFile.toFile(), 'UTF-8')
+                    String detail = detailHtml.selectFirst("a[name=$methodName]").parent().selectFirst("span.code pre").text()
+                    failedTests += [method: "$className.$methodName", detail: detail]
+                }
+            }
+        }
+
+        if (!failedTests.isEmpty()) {
+            testSummaryFile.withPrintWriter('UTF-8') { writer ->
+                failedTests.each { it ->
+                    String detail = it.detail
+
+                    // Create an link to directly create an issue from the error message
+                    def ghIssueTitle = URLEncoder.encode("Test failure: `$it.method`", "UTF-8")
+                    // 8k is the maximum allowed URL length for GitHub
+                    def ghIssueBody = URLEncoder.encode("```\n${detail.substring(0, 6000)}\n```\n", "UTF-8")
+                    def ghIssueLink = "https://github.com/line/armeria/issues/new?title=$ghIssueTitle&body=$ghIssueBody"
+                    writer.println("- $it.method - [Reigister as an issue?]($ghIssueLink)")
+                    writer.println("  ```")
+
+                    List<String> lines = detail.split("\n") as List
+                    def summary = lines.take(8)
+                    summary.each { line -> writer.println("  $line") }
+                    writer.println("  ```")
+                    if (lines.size() > 8) {
+                        writer.println("  <details><summary>Full error messages</summary>")
+                        writer.println("  <pre>")
+                        lines.each { line -> writer.println("  $line") }
+                        writer.println("  </pre></details>\n")
+                    }
+                }
+            }
+        }
     }
 }
