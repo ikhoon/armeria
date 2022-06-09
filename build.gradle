@@ -290,7 +290,7 @@ class TestsReportTask extends DefaultTask {
                 def ghIssueBody = URLEncoder.encode("```\n${detail.substring(0, 6000)}\n```\n", "UTF-8")
                 def ghIssueLink =
                         "https://github.com/line/armeria/issues/new?title=$ghIssueTitle&body=$ghIssueBody"
-                writer.println("- $it.method [[Create an issue]]($ghIssueLink)")
+                writer.println("- $it.method - [Create an issue?]($ghIssueLink)")
                 writer.println("  ```")
 
                 List<String> lines = detail.split("\n") as List
