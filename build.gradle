@@ -237,21 +237,11 @@ tasks.closeAndReleaseStagingRepository.doFirst {
     }
 }
 
-task summarizeFailedTests(type: TestsSummaryTask)
+task reportFailedTests(type: TestsReportTask)
 
-class TestsSummaryTask extends DefaultTask {
+class TestsReportTask extends DefaultTask {
     @OutputFile
-    final def testSummaryFile = project.file("${project.buildDir}/failed-tests-summary.txt")
-
-    private String target = "GITHUB"
-
-    /**
-     * Sets the output target of tests summary.
-     * {@code GITHUB} and {@code CONSOLE} are supported.
-     */
-    def setTarget(String target) {
-        this.target = target
-    }
+    final def reportFile = project.file("${project.buildDir}/failed-tests-result.txt")
 
     @TaskAction
     def run() {
@@ -290,7 +280,7 @@ class TestsSummaryTask extends DefaultTask {
             return
         }
 
-        testSummaryFile.withPrintWriter('UTF-8') { writer ->
+        reportFile.withPrintWriter('UTF-8') { writer ->
             failedTests.each { it ->
                 String detail = it.detail
 
@@ -298,8 +288,9 @@ class TestsSummaryTask extends DefaultTask {
                 def ghIssueTitle = URLEncoder.encode("Test failure: `$it.method`", "UTF-8")
                 // 8k is the maximum allowed URL length for GitHub
                 def ghIssueBody = URLEncoder.encode("```\n${detail.substring(0, 6000)}\n```\n", "UTF-8")
-                def ghIssueLink = "https://github.com/line/armeria/issues/new?title=$ghIssueTitle&body=$ghIssueBody"
-                writer.println("- $it.method - [[Create an issue]]($ghIssueLink)")
+                def ghIssueLink =
+                        "https://github.com/line/armeria/issues/new?title=$ghIssueTitle&body=$ghIssueBody"
+                writer.println("- $it.method [[Create an issue]]($ghIssueLink)")
                 writer.println("  ```")
 
                 List<String> lines = detail.split("\n") as List
