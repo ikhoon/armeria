@@ -1,9 +1,7 @@
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 
 buildscript {
@@ -245,60 +243,74 @@ class TestsSummaryTask extends DefaultTask {
     @OutputFile
     final def testSummaryFile = project.file("${project.buildDir}/failed-tests-summary.txt")
 
+    private String target = "GITHUB"
+
+    /**
+     * Sets the output target of tests summary.
+     * {@code GITHUB} and {@code CONSOLE} are supported.
+     */
+    def setTarget(String target) {
+        this.target = target
+    }
+
     @TaskAction
     def run() {
         // Collect up to 20 error results
         int maxErrorSize = 20
-        def entryPoints = []
-        def failedTests = []
+        List<Map> failedTests = []
+        Set<String> handledFiles = []
+
         project.allprojects {
             tasks.withType(Test) { testTask ->
-                entryPoints << testTask.reports.html.entryPoint
-                println(testTask.reports.html.entryPoint)
 
-                def indexFile = testTask.reports.html.entryPoint
-                if (!indexFile.exists()) {
+                def xmlFiles = testTask.reports.junitXml.outputLocation.asFileTree.files
+                if (xmlFiles.isEmpty()) {
                     return
                 }
-                Elements dom = Jsoup.parse(indexFile, 'UTF-8').body().select("ul.linkList li")
-                dom.each { Element failedTest ->
-                    if (failedTests.size() > maxErrorSize) {
+                xmlFiles.each { file ->
+                    if (!handledFiles.add(file.name)) {
                         return
                     }
-                    String detailReportLink = failedTest.child(0).attr("href")
-                    String className = detailReportLink.replace("classes/", "").replace(".html", "")
-                    String methodName = failedTest.child(1).text()
-                    Path detailFile = indexFile.toPath().getParent().resolve(detailReportLink)
-                    Document detailHtml = Jsoup.parse(detailFile.toFile(), 'UTF-8')
-                    String detail = detailHtml.selectFirst("a[name=$methodName]").parent().selectFirst("span.code pre").text()
-                    failedTests += [method: "$className.$methodName", detail: detail]
+
+                    Elements failures = Jsoup.parse(file, 'UTF-8').select("testsuite failure")
+                    if (failures.isEmpty() || failedTests.size() > maxErrorSize) {
+                        return
+                    }
+                    failures.each { failure ->
+                        Element parent = failure.parent()
+                        String fullMethodName = "${parent.attr("classname")}.${parent.attr("name")}"
+                        String detail = failure.wholeText()
+                        failedTests += [method: fullMethodName, detail: detail]
+                    }
                 }
             }
         }
 
-        if (!failedTests.isEmpty()) {
-            testSummaryFile.withPrintWriter('UTF-8') { writer ->
-                failedTests.each { it ->
-                    String detail = it.detail
+        if (failedTests.isEmpty()) {
+            return
+        }
 
-                    // Create an link to directly create an issue from the error message
-                    def ghIssueTitle = URLEncoder.encode("Test failure: `$it.method`", "UTF-8")
-                    // 8k is the maximum allowed URL length for GitHub
-                    def ghIssueBody = URLEncoder.encode("```\n${detail.substring(0, 6000)}\n```\n", "UTF-8")
-                    def ghIssueLink = "https://github.com/line/armeria/issues/new?title=$ghIssueTitle&body=$ghIssueBody"
-                    writer.println("- $it.method - [Reigister as an issue?]($ghIssueLink)")
-                    writer.println("  ```")
+        testSummaryFile.withPrintWriter('UTF-8') { writer ->
+            failedTests.each { it ->
+                String detail = it.detail
 
-                    List<String> lines = detail.split("\n") as List
-                    def summary = lines.take(8)
-                    summary.each { line -> writer.println("  $line") }
-                    writer.println("  ```")
-                    if (lines.size() > 8) {
-                        writer.println("  <details><summary>Full error messages</summary>")
-                        writer.println("  <pre>")
-                        lines.each { line -> writer.println("  $line") }
-                        writer.println("  </pre></details>\n")
-                    }
+                // Create an link to directly create an issue from the error message
+                def ghIssueTitle = URLEncoder.encode("Test failure: `$it.method`", "UTF-8")
+                // 8k is the maximum allowed URL length for GitHub
+                def ghIssueBody = URLEncoder.encode("```\n${detail.substring(0, 6000)}\n```\n", "UTF-8")
+                def ghIssueLink = "https://github.com/line/armeria/issues/new?title=$ghIssueTitle&body=$ghIssueBody"
+                writer.println("- $it.method - [[Create an issue]]($ghIssueLink)")
+                writer.println("  ```")
+
+                List<String> lines = detail.split("\n") as List
+                def summary = lines.take(8)
+                summary.each { line -> writer.println("  $line") }
+                writer.println("  ```")
+                if (lines.size() > 8) {
+                    writer.println("  <details><summary>Full error messages</summary>")
+                    writer.println("  <pre>")
+                    lines.each { line -> writer.println("  $line") }
+                    writer.println("  </pre></details>\n")
                 }
             }
         }

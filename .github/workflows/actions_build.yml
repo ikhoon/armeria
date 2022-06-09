@@ -126,7 +126,7 @@ jobs:
           
           SUMMARY_FILE = "build/failed-tests-summary.txt"
           if test -f "$SUMMARY_FILE"; then
-            echo '### 🔴 Failed tests\n' > $GITHUB_STEP_SUMMARY
+            echo '### 🔴 Failed tests (${{ matrix.on }}, Java ${{ matrix.java }})\n' >> $GITHUB_STEP_SUMMARY
             cat $SUMMARY_FILE >> $GITHUB_STEP_SUMMARY
           fi
         shell: bash
@@ -254,6 +254,18 @@ jobs:
       - name: Run flaky tests
         run: |
           ./gradlew --no-daemon --stacktrace --max-workers=2 --parallel check -PnoWeb -PnoLint -PflakyTests=true
+
+      - name: Summarize the failed tests
+        if: failure()
+        run: |
+          ./gradlew --no-daemon --stacktrace --max-workers=1 -PnoWeb -PnoLint summarizeFailedTests \
+          
+          SUMMARY_FILE = "build/failed-tests-summary.txt"
+          if test -f "$SUMMARY_FILE"; then
+            echo '### 🔴 Failed tests (${{ matrix.on }}, Java ${{ matrix.java }})\n' >> $GITHUB_STEP_SUMMARY
+            cat $SUMMARY_FILE >> $GITHUB_STEP_SUMMARY
+          fi
+        shell: bash
 
       - name: Clean up the cache
         run: |
