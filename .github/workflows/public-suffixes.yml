@@ -2,7 +2,7 @@ name: Update Public Suffix List
 on:
   schedule:
     # TODO(ikhoon): Revert
-    - cron: '*/5 * * * *'
+    - cron: '* * * * *'
 
 env:
   LC_ALL: "en_US.UTF-8"
