@@ -1,0 +1,7 @@
+pull_request_rules:
+  - name: Automatically merge Public suffix list pull requests
+    conditions:
+      - author=armerian
+    actions:
+      merge:
+        method: squash
