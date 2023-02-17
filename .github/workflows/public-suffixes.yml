@@ -49,6 +49,5 @@ jobs:
           committer: Meri Kim <dl_armeria@linecorp.com>
           delete-branch: true
           label: miscellaneous
-          token: ${{ secrets.ARMERIAN_PAT }}
           add-paths: |
             core/src/main/resources/com/linecorp/armeria/public_suffixes.txt
