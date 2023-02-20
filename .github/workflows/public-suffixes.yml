@@ -1,7 +1,7 @@
 name: Update Public Suffix List
 on:
   schedule:
-    - cron: '5/* * * * *'
+    - cron: '*/5 * * * *'
 
 env:
   LC_ALL: "en_US.UTF-8"
