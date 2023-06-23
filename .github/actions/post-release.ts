@@ -1,6 +1,6 @@
 import { Octokit } from 'octokit';
 
-const octokit = new Octokit({ auth: process.env.GH_ACCESS_TOKEN });
+const octokit = new Octokit({ auth: process.env.GITHUB_ACCESS_TOKEN });
 
 main();
 
@@ -35,9 +35,8 @@ async function main(): Promise<void> {
   console.log(`📝 https://github.com/line/armeria/releases/tag/${tag} has been updated.`)
 
   // Trigger Central Dogma workflow to upgrade Armeria version
-  const cdOctokit = new Octokit({ auth: process.env.GH_ACCESS_TOKEN });
   console.log(`⛓️ Triggering 'update-armeria-version' workflow in Central Dogma repository...`);
-  await cdOctokit.rest.actions.createWorkflowDispatch({
+  await octokit.rest.actions.createWorkflowDispatch({
     owner: owner,
     repo: 'centraldogma',
     workflow_id: 'update-armeria-version.yml',
