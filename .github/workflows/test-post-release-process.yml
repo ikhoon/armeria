@@ -1,0 +1,25 @@
+name: Publish final artifacts to Maven Central repository
+
+on:
+  push:
+    tags:
+      - armeria-*
+
+jobs:
+  post-release:
+    name: Perform post release process
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+
+      - name: Perform post release process
+        working-directory: .github/actions
+        run: |
+          npm install
+          ts-node post-release.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CD_GITHUB_TOKEN: ${{ secrets.CD_GITHUB_TOKEN }}
