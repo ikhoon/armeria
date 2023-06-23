@@ -1,4 +1,4 @@
-name: Publish final artifacts to Maven Central repository
+name: Perform post release process
 
 on:
   push:
