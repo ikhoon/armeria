@@ -19,7 +19,7 @@ jobs:
         working-directory: .github/actions
         run: |
           npm install
-          ts-node post-release.ts
+          npm run post-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CD_GITHUB_TOKEN: ${{ secrets.CD_GITHUB_TOKEN }}

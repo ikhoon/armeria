@@ -1,19 +1,18 @@
-import {Octokit} from '@octokit/action';
-import * as Actions from '@actions/core';
+import { Octokit } from 'octokit';
 
-const octokit = new Octokit();
+const octokit = new Octokit({ auth: process.env.GITHUB_ACCESS_TOKEN });
 
 main();
 
 async function main(): Promise<void> {
-  const tag = Actions.getInput("tag");
+  const tag = process.argv.slice(2).shift();
   const releaseVersion = tag.replace("armeria-", "");
   const owner = 'ikhoon';
   const repo = 'armeria';
   const milestoneId = await getMilestoneId(owner, repo, releaseVersion);
 
   // Close the milestone
-  Actions.info(`[info] 🎯 Closing milestone #${milestoneId}...`);
+  console.log(`🎯 Closing milestone #${milestoneId}...`);
   await octokit.rest.issues.updateMilestone({
     owner,
     repo,
@@ -21,32 +20,32 @@ async function main(): Promise<void> {
     due_on: new Date().toISOString(),
     state: "closed"
   })
-  Actions.info(`https://github.com/line/armeria/milestone/${milestoneId} has been closed.`)
+  console.log(`🎯 https://github.com/line/armeria/milestone/${milestoneId} has been closed.`)
 
-  // Update release notes
-  const releaseInfo = await octokit.rest.repos.getReleaseByTag({owner, repo, tag});
-  const releaseId = releaseInfo.data.id;
-  Actions.info(`[info] 📝 Updating release notes #${releaseId}...`);
-  await octokit.rest.repos.updateRelease({
+  // Create a new release
+  console.log(`📝 Creating release notes ...`);
+  await octokit.rest.repos.createRelease({
     owner,
     repo,
-    release_id: releaseId,
+    name: tag,
+    tag_name: tag,
     body: `See [the release notes](https://armeria.dev/release-notes/${releaseVersion}/) for the complete change list.`
+
   });
-  Actions.info(`https://github.com/line/armeria/releases/tag/${tag} has been updated.`)
+  console.log(`📝 https://github.com/line/armeria/releases/tag/${tag} has been updated.`)
 
   // Trigger Central Dogma workflow to upgrade Armeria version
-  const cdOctokit = new Octokit({ auth: process.env.GITHUB_CD_ACCESS_TOKEN });
-  Actions.info(`[info] ⛓️ Triggering 'update-armeria-version' workflow in Central Dogma repository...`);
+  const cdOctokit = new Octokit({ auth: process.env.GITHUB_ACCESS_TOKEN });
+  console.log(`⛓️ Triggering 'update-armeria-version' workflow in Central Dogma repository...`);
   await cdOctokit.rest.repos.createDispatchEvent({
     owner: owner,
     repo: 'centraldogma',
-    event_type: 'update-armeria-version',
+    event_type: 'update-armeria-version.yml',
     client_payload: {
       armeria_version: releaseVersion
     },
   })
-  Actions.info("https://github.com/line/centraldogma/actions/workflows/update-armeria-version.yml has been triggered")
+  console.log("⛓️ https://github.com/line/centraldogma/actions/workflows/update-armeria-version.yml has been triggered")
 }
 
 // Create a pull request to Central Dogma for updating Armeria version if the current version is a minor patch.
@@ -58,8 +57,8 @@ async function getMilestoneId(owner: string, repo: string, version: string): Pro
   const response = await octokit.request(
       'GET /repos/{owner}/{repo}/milestones',
       {
-        owner: 'line',
-        repo: 'armeria',
+        owner,
+        repo,
         direction: 'desc',
         per_page: 100,
         state: 'open',
