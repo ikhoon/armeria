@@ -37,11 +37,12 @@ async function main(): Promise<void> {
   // Trigger Central Dogma workflow to upgrade Armeria version
   const cdOctokit = new Octokit({ auth: process.env.GITHUB_ACCESS_TOKEN });
   console.log(`⛓️ Triggering 'update-armeria-version' workflow in Central Dogma repository...`);
-  await cdOctokit.rest.repos.createDispatchEvent({
+  await cdOctokit.rest.actions.createWorkflowDispatch({
     owner: owner,
     repo: 'centraldogma',
-    event_type: 'update-armeria-version.yml',
-    client_payload: {
+    workflow_id: 'update-armeria-version.yml',
+    ref: 'main',
+    inputs: {
       armeria_version: releaseVersion
     },
   })
