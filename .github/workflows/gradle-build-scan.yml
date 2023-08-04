@@ -29,9 +29,10 @@ jobs:
         with:
           workflow: actions_build.yml
           workflow_conclusion: ''
-          name: ^build-scan
+          name: build-scan-.*
           name_is_regexp: true
           path: build_scans
+          commit: ${{ github.event.check_run.head_sha }}
           event: push
 
       - id: upload-build-scans
@@ -40,7 +41,7 @@ jobs:
           SCANS=""
           for scan in build_scans/*/ ; do
             rm -rf ~/.gradle/build-scan-data
-            cp -r $scan/build-scan-data ~/.gradle/build-scan-data
+            cp -r $scan ~/.gradle/build-scan-data
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
             SCANS="- $scan: $(cat build/build-scan-url.txt)\n${SCANS}"
           done
