@@ -1,0 +1,83 @@
+name: Upload Gradle build scans to ge.armeria.dev
+
+on:
+  check_run:
+    types: [ completed ]
+env:
+  LC_ALL: "en_US.UTF-8"
+  GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+
+jobs:
+  upload-gradle-build-scan:
+    name: Upload Gradle build scans
+    # TODO(ikhoon): Uncomment this after testing
+#    if: github.repository == 'line/armeria'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: setup-jdk-19
+        name: Set up JDK 19
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '19'
+
+      - id: download-artifact
+        name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: actions_build.yml
+          workflow_conclusion: ''
+          commit: ${{ github.sha }}
+          name: ^build-scan
+          name_is_regexp: true
+          path: build_scans
+
+      - id: upload-build-scans
+        name: Upload build scans
+        run: |
+          SCANS=""
+          for scan in build_scans/*/ ; do
+            rm -rf ~/.gradle/build-scan-data
+            cp -r $scan/build-scan-data ~/.gradle/build-scan-data
+            ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
+            SCANS="- $scan: $(cat build/build-scan-url.txt)\n${SCANS}"
+          done
+          echo "::set-output name=scans::${$SCANS}"
+
+      - id: create-or-update-comment
+        name: Create or update comment
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: ${{ github.event.check_run.head_sha }},
+            });
+            const prNumber = pr.data[0].number;  // assumes that there's at least one PR
+
+            const scans = ${{ steps.upload-build-scans.outputs.scans }}
+            const comments = await github.rest.pulls.listComments({
+              ...context.repo,
+              pull_number: prNumber,
+            })
+            let scanComment = comments.data.find(comment => comment.body.includes('Gradle build scans'))
+
+            const commentBody = `### Gradle build scans (commit: ${{ github.sha }})\n\n${scans}`;
+            if (scanComment) {
+              // Update the previous comment
+              await github.rest.pulls.updateComment({
+                ...context.repo,
+                comment_id: scanComment.id,
+                body: commentBody
+              })
+            } else {
+              // If no previous comment, create a new one
+              await github.rest.pulls.createComment({
+                ...context.repo,
+                pull_number: prNumber,
+                body: commentBody
+              })
+            }

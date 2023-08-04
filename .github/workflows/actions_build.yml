@@ -22,7 +22,8 @@ env:
 
 jobs:
   build:
-    if: github.repository == 'line/armeria'
+    # TODO(ikhoon): Uncomment this after testing
+#    if: github.repository == 'line/armeria'
     runs-on: ${{ matrix.on }}
     timeout-minutes: 120
     strategy:
@@ -72,35 +73,45 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
+      # TODO: (ikhoon) Remove this after testing
+      - name: Tasks with Gradle
+        run: |
+           ./gradlew --no-daemon --stacktrace tasks
       # Build the shaded JARs first so that shading process doesn't incur memory pressure
       # on other Gradle tasks such as tests.
-      - name: Build with Gradle (Shading only)
-        run: |
-          ./gradlew --no-daemon --stacktrace shadedJar shadedTestJar trimShadedJar \
-          ${{ (matrix.on == 'self-hosted') && '--max-workers=8' || '--max-workers=2' }} --parallel \
-          ${{ matrix.coverage && '-Pcoverage' || '' }} \
-          -PnoLint \
-          -PbuildJdkVersion=${{ env.BUILD_JDK_VERSION }} \
-          -PtestJavaVersion=${{ matrix.java }} \
-          ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
-          -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
-        shell: bash
+#      - name: Build with Gradle (Shading only)
+#        run: |
+#          ./gradlew --no-daemon --stacktrace shadedJar shadedTestJar trimShadedJar \
+#          ${{ (matrix.on == 'self-hosted') && '--max-workers=8' || '--max-workers=2' }} --parallel \
+#          ${{ matrix.coverage && '-Pcoverage' || '' }} \
+#          -PnoLint \
+#          -PbuildJdkVersion=${{ env.BUILD_JDK_VERSION }} \
+#          -PtestJavaVersion=${{ matrix.java }} \
+#          ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
+#          -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
+#        shell: bash
+#
+#      - name: Build with Gradle
+#        run: |
+#          ./gradlew --no-daemon --stacktrace build \
+#          ${{ (matrix.on == 'self-hosted') && '--max-workers=8' || '--max-workers=2' }} --parallel \
+#          ${{ matrix.coverage && '-Pcoverage' || '' }} \
+#          ${{ matrix.leak && '-Pleak' || '' }} \
+#          ${{ matrix.blockhound && '-Pblockhound' || '' }} \
+#          -PnoLint \
+#          -PflakyTests=false \
+#          -Pretry=true \
+#          -PbuildJdkVersion=${{ env.BUILD_JDK_VERSION }} \
+#          -PtestJavaVersion=${{ matrix.java }} \
+#          ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
+#          -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
+#        shell: bash
 
-      - name: Build with Gradle
-        run: |
-          ./gradlew --no-daemon --stacktrace build \
-          ${{ (matrix.on == 'self-hosted') && '--max-workers=8' || '--max-workers=2' }} --parallel \
-          ${{ matrix.coverage && '-Pcoverage' || '' }} \
-          ${{ matrix.leak && '-Pleak' || '' }} \
-          ${{ matrix.blockhound && '-Pblockhound' || '' }} \
-          -PnoLint \
-          -PflakyTests=false \
-          -Pretry=true \
-          -PbuildJdkVersion=${{ env.BUILD_JDK_VERSION }} \
-          -PtestJavaVersion=${{ matrix.java }} \
-          ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
-          -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
-        shell: bash
+      - name: Upload Gradle build scan
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-scan-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}
+          path: ~/.gradle/build-scan-data
 
       - if: ${{ matrix.snapshot && github.ref_name == 'main' }}
         name: Publish snapshots
@@ -174,7 +185,7 @@ jobs:
 
       - name: Upload the artifacts
         if: failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: reports-JVM-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}
           path: reports-JVM-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}.tar

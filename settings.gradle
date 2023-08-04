@@ -11,12 +11,22 @@ plugins {
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.11.1'
 }
 
+import com.gradle.scan.plugin.PublishedBuildScan
+
 gradleEnterprise {
     server = "https://ge.armeria.dev"
     buildScan {
-        publishIfAuthenticated()
-        publishAlways()
-        uploadInBackground = System.getenv("CI") == null
+        if (System.getenv("CI") == null) {
+            publishIfAuthenticated()
+            publishAlways()
+        } else {
+            uploadInBackground = false
+            buildScanPublished { PublishedBuildScan scan ->
+                file("build/build-scan-url.txt").newWriter().withWriter { w ->
+                    w << "${scan.buildScanUri}"
+                }
+            }
+        }
         capture {
             taskInputFiles = true
         }
