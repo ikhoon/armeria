@@ -22,9 +22,11 @@ gradleEnterprise {
         } else {
             uploadInBackground = false
             buildScanPublished { PublishedBuildScan scan ->
-                file("build/build-scan-url.txt").newWriter().withWriter { w ->
-                    w << "${scan.buildScanUri}"
+                def scanUrl = file("build/build-scan-url.txt")
+                if(!scanUrl.getParentFile().exists()) {
+                    scanUrl.getParentFile().mkdirs()
                 }
+                scanUrl.newWriter().withWriter { w -> w << "${scan.buildScanUri}" }
             }
         }
         capture {
