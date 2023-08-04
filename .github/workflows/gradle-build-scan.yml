@@ -23,16 +23,30 @@ jobs:
           distribution: 'temurin'
           java-version: '19'
 
+      - name: Get PR Number
+        id: get_pr_number
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: ${{ github.event.check_run.head_sha }},
+            });
+            const prNumber = pr.data[0].number;
+            return prNumber;
+
       - id: download-artifact
         name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: actions_build.yml
           workflow_conclusion: ''
+          pr: ${{ steps.get_pr_number.outputs.result }}
           name: build-scan-.*
           name_is_regexp: true
           path: build_scans
-          commit: ${{ github.event.check_run.head_sha }}
           event: push
           check_artifacts: true
           search_artifacts: true
@@ -54,12 +68,7 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: ${{ github.event.check_run.head_sha }},
-            });
-            const prNumber = pr.data[0].number;  // assumes that there's at least one PR
+            const prNumber = ${{ steps.get_pr_number.outputs.result }}
 
             const scans = ${{ steps.upload-build-scans.outputs.scans }}
             const comments = await github.rest.pulls.listComments({
