@@ -25,6 +25,12 @@ jobs:
           distribution: 'temurin'
           java-version: '19'
 
+      - id: print-check-run-context
+        name: Print check run context
+        run:
+          echo "${{ toJson(github.event.check_run) }}"
+        shell: bash
+
       - id: download-artifact
         name: Download artifact
         uses: dawidd6/action-download-artifact@v2
