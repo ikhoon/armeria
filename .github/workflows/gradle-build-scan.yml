@@ -39,7 +39,7 @@ jobs:
       - id: download-artifacts
         name: Download artifacts
         run: |
-          gh run download ${{ steps.get-run-id.outputs.CHECK_RUN_ID }} -D build_scans
+          gh run download ${{ steps.get-run-id.outputs.CHECK_RUN_ID }} -R ikhoon/armeria -D build_scans
         shell: bash
 
       - id: upload-build-scans
