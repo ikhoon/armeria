@@ -3,6 +3,7 @@ name: Upload Gradle build scans to ge.armeria.dev
 on:
   check_run:
     types: [ completed ]
+
 env:
   LC_ALL: "en_US.UTF-8"
   GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -30,15 +31,15 @@ jobs:
         with:
           script: |
             console.log("check run: " + github.event.check_run);
-            const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: github.event.check_run.head_sha,
-            });
-            console.log("PR : " + pr);
-            const prNumber = pr.data[0].number;
-            console.log("PR number: " + prNumber);
-            return prNumber;
+#            const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              commit_sha: github.event.check_run.head_sha,
+#            });
+#            console.log("PR : " + pr);
+#            const prNumber = pr.data[0].number;
+#            console.log("PR number: " + prNumber);
+            return 37;
 
       - id: download-artifact
         name: Download artifact
