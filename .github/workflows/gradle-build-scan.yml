@@ -8,6 +8,7 @@ env:
   LC_ALL: "en_US.UTF-8"
   GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
   ACTIONS_STEP_DEBUG: true
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   upload-gradle-build-scan:
