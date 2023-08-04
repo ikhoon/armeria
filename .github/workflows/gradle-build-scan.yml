@@ -42,6 +42,11 @@ jobs:
 #          gh run download ${{ steps.get-run-id.outputs.CHECK_RUN_ID }} -R ikhoon/armeria -D build_scans
 #        shell: bash
 
+      - id: sleep
+        name: Wait for artifacts to be updated
+        run: sleep 120
+        shell: bash
+
       - name: Download artifact
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
@@ -67,9 +72,9 @@ jobs:
         name: Upload build scans
         run: |
           SCANS=""
-          for scan in build_scans/*/ ; do
+          for scan in $(ls build_scans/) ; do
             rm -rf ~/.gradle/build-scan-data
-            cp -r $scan ~/.gradle/build-scan-data
+            cp -r "build_scans/$scan/" ~/.gradle/build-scan-data
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
             SCANS="- scan: $(cat build/build-scan-url.txt)\n${SCANS}"
           done
