@@ -6,6 +6,7 @@ on:
 env:
   LC_ALL: "en_US.UTF-8"
   GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+  ACTIONS_STEP_DEBUG: true
 
 jobs:
   upload-gradle-build-scan:
@@ -31,9 +32,11 @@ jobs:
             const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              commit_sha: "${{ github.event.check_run.head_sha }}",
+              commit_sha: github.event.check_run.head_sha,
             });
+            console.log("PR : " + pr);
             const prNumber = pr.data[0].number;
+            console.log("PR number: " + prNumber);
             return prNumber;
 
       - id: download-artifact
