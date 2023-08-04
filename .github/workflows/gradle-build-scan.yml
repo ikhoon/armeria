@@ -25,24 +25,21 @@ jobs:
           distribution: 'temurin'
           java-version: '19'
 
-      - id: print-check-run-context
-        name: Print check run context
+      - id: get-run-id
+        name: Get run ID
         run:
           echo "${{ toJson(github.event.check_run) }}"
+          gh pr checks ${{ github.event.check_run.pull_requests[0].number }} | \
+          grep runs | \
+          head -n 1 | \
+          sed 's/.*runs\/\([0-9]*\)\/.*/\1/' | \
+          awk '{ print "::set-output name=check_run_id::"$0 }'
         shell: bash
 
-      - id: download-artifact
-        name: Download artifact
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: actions_build.yml
-          workflow_conclusion: ''
-          pr: ${{ github.event.check_run.pull_requests[0].number }}
-          name: build-scan-.*
-          name_is_regexp: true
-          path: build_scans
-          check_artifacts: true
-          search_artifacts: true
+      - id: download-artifacts
+        name: Download artifacts
+        run:
+          gh run download ${{ steps.get-run-id.outputs.check_run_id }} -D build_scans
 
       - id: upload-build-scans
         name: Upload build scans
