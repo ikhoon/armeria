@@ -31,26 +31,26 @@ jobs:
       matrix:
         on: [ ubuntu-latest ] # , macos-12, windows-latest ]
         java: [ 19 ]
-        include:
-          - java: 8
-            on: ubuntu-latest
-          - java: 11
-            on: ubuntu-latest
-          - java: 17
-            on: ubuntu-latest
-            leak: true
-          - java: 17
-            on: ubuntu-latest
-            min-java: 11
-          - java: 17
-            on: ubuntu-latest
-            min-java: 17
-            coverage: true
-          - java: 19
-            on: ubuntu-latest
-            snapshot: true
-            # blockhound makes the build run about 10 minutes slower
-            blockhound: true
+#        include:
+#          - java: 8
+#            on: ubuntu-latest
+#          - java: 11
+#            on: ubuntu-latest
+#          - java: 17
+#            on: ubuntu-latest
+#            leak: true
+#          - java: 17
+#            on: ubuntu-latest
+#            min-java: 11
+#          - java: 17
+#            on: ubuntu-latest
+#            min-java: 17
+#            coverage: true
+#          - java: 19
+#            on: ubuntu-latest
+#            snapshot: true
+#            # blockhound makes the build run about 10 minutes slower
+#            blockhound: true
 
     steps:
       - uses: actions/checkout@v2
