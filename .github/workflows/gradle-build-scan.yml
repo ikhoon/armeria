@@ -35,7 +35,6 @@ jobs:
           name: build-scan-.*
           name_is_regexp: true
           path: build_scans
-          event: pull_request
           check_artifacts: true
           search_artifacts: true
 
