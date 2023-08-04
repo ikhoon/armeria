@@ -30,10 +30,10 @@ jobs:
       - id: get-run-id
         name: Get run ID
         run: |
-          gh pr checks ${{ github.event.check_run.pull_requests[0].number }} -R ikhoon/armeria
-#          grep runs | \
-#          head -n 1 | \
-#          sed 's/.*runs\/\([0-9]*\)\/.*/CHECK_RUN_ID=\1/' >> "$GITHUB_OUTPUT"
+          gh pr checks ${{ github.event.check_run.pull_requests[0].number }} -R ikhoon/armeria | \
+          grep runs | \
+          head -n 1 | \
+          sed 's/.*runs\/\([0-9]*\)\/.*/CHECK_RUN_ID=\1/' >> "$GITHUB_OUTPUT" || true
         shell: bash
 
       - id: download-artifacts
