@@ -30,7 +30,7 @@ jobs:
           workflow: actions_build.yml
           workflow_conclusion: ''
           commit: ${{ github.sha }}
-          name: ^build-scan
+          name: build-scan
           name_is_regexp: true
           path: build_scans
 
