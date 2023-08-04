@@ -22,7 +22,7 @@ gradleEnterprise {
         } else {
             uploadInBackground = false
             buildScanPublished { PublishedBuildScan scan ->
-                def scanUrl = file("build/build-scan-url.txt")
+                def scanUrl = new File("build/build-scan-url.txt")
                 if(!scanUrl.getParentFile().exists()) {
                     scanUrl.getParentFile().mkdirs()
                 }

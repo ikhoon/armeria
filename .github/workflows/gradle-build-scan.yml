@@ -76,11 +76,13 @@ jobs:
       - id: upload-build-scans
         name: Upload build scans
         run: |
+          DOWNLOAD_DIR="build/build-scans/"
+          BUILD_SCAN_DIR="~/.gradle/build-scan-data"
           SCANS=""
-          mkdir -p ~/.gradle/build-scan-data
-          for scan in $(ls build/build-scans/) ; do
-            rm -rf ~/.gradle/build-scan-data
-            cp -r "build/build-scans/$scan/" ~/.gradle/build-scan-data
+          mkdir -p $BUILD_SCAN_DIR
+          for scan in $(ls DOWNLOAD_DIR) ; do
+            rm -rf $BUILD_SCAN_DIR
+            cp -r "${DOWNLOAD_DIR}${scan}/" $BUILD_SCAN_DIR
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
             SCANS="- scan: $(cat build/build-scan-url.txt)\n${SCANS}"
           done
