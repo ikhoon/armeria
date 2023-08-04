@@ -31,7 +31,7 @@ jobs:
             const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              commit_sha: ${{ github.event.check_run.head_sha }},
+              commit_sha: "${{ github.event.check_run.head_sha }}",
             });
             const prNumber = pr.data[0].number;
             return prNumber;
