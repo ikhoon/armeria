@@ -68,6 +68,11 @@ jobs:
           # default false
           search_artifacts: true
 
+      - name: ls
+        id: ls
+        run: ls
+        shell: bash
+
       - id: upload-build-scans
         name: Upload build scans
         run: |
