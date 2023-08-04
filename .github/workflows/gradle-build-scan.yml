@@ -57,7 +57,7 @@ jobs:
           # Optional, name is treated as a regular expression if set true
           name_is_regexp: true
           # Optional, a directory where to extract artifact(s), defaults to the current directory
-          path: build-scans
+          path: build/build-scans
           # Optional, defaults to current repo
           repo: ikhoon/armeria
           # Optional, check the workflow run to whether it has an artifact
@@ -78,9 +78,9 @@ jobs:
         run: |
           SCANS=""
           mkdir -p ~/.gradle/build-scan-data
-          for scan in $(ls build-scans/) ; do
+          for scan in $(ls build/build-scans/) ; do
             rm -rf ~/.gradle/build-scan-data
-            cp -r "build-scans/$scan/" ~/.gradle/build-scan-data
+            cp -r "build/build-scans/$scan/" ~/.gradle/build-scan-data
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
             SCANS="- scan: $(cat build/build-scan-url.txt)\n${SCANS}"
           done
