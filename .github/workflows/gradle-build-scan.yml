@@ -96,7 +96,7 @@ jobs:
           script: |
             const prNumber = ${{ github.event.check_run.pull_requests[0].number }}
 
-            const scans = ${{ steps.upload-build-scans.outputs.scans }}
+            const scans = "${{ steps.upload-build-scans.outputs.SCANS }}"
             const comments = await github.rest.pulls.listComments({
               ...context.repo,
               pull_number: prNumber,
