@@ -77,7 +77,7 @@ jobs:
         name: Upload build scans
         run: |
           SCANS=""
-          for scan in $(ls build_scans/) ; do
+          for scan in $(ls build-scans/) ; do
             rm -rf ~/.gradle/build-scan-data
             cp -r "build_scans/$scan/" ~/.gradle/build-scan-data
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
