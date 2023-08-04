@@ -36,11 +36,32 @@ jobs:
           sed 's/.*runs\/\([0-9]*\)\/.*/CHECK_RUN_ID=\1/' >> "$GITHUB_OUTPUT" || true
         shell: bash
 
-      - id: download-artifacts
-        name: Download artifacts
-        run: |
-          gh run download ${{ steps.get-run-id.outputs.CHECK_RUN_ID }} -R ikhoon/armeria -D build_scans
-        shell: bash
+#      - id: download-artifacts
+#        name: Download artifacts
+#        run: |
+#          gh run download ${{ steps.get-run-id.outputs.CHECK_RUN_ID }} -R ikhoon/armeria -D build_scans
+#        shell: bash
+
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow_conclusion: ""
+          run_id: ${{ steps.get-run-id.outputs.CHECK_RUN_ID }}
+          name: build-scan.*
+          # Optional, name is treated as a regular expression if set true
+          name_is_regexp: true
+          # Optional, a directory where to extract artifact(s), defaults to the current directory
+          path: build-scans
+          # Optional, defaults to current repo
+          repo: ikhoon/armeria
+          # Optional, check the workflow run to whether it has an artifact
+          # then will get the last available artifact from the previous workflow
+          # default false, just try to download from the last one
+          check_artifacts: true
+          # Optional, search for the last workflow run whose stored an artifact named as in `name` input
+          # default false
+          search_artifacts: true
 
       - id: upload-build-scans
         name: Upload build scans
