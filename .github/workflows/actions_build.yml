@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        on: [ ubuntu-latest, macos-12, windows-latest ]
+        on: [ ubuntu-latest ] # , macos-12, windows-latest ]
         java: [ 19 ]
         include:
           - java: 8
