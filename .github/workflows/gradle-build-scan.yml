@@ -34,6 +34,8 @@ jobs:
           path: build_scans
           commit: ${{ github.event.check_run.head_sha }}
           event: push
+          check_artifacts: true
+          search_artifacts: true
 
       - id: upload-build-scans
         name: Upload build scans
