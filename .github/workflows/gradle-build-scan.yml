@@ -29,10 +29,11 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
+            console.log("check run: " + github.event.check_run);
             const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              commit_sha: github.sha,
+              commit_sha: github.event.check_run.head_sha,
             });
             console.log("PR : " + pr);
             const prNumber = pr.data[0].number;
