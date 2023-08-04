@@ -12,7 +12,7 @@ jobs:
     name: Upload Gradle build scans
     # TODO(ikhoon): Uncomment this after testing
 #    if: github.repository == 'line/armeria'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
