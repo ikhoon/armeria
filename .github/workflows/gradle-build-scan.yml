@@ -25,20 +25,13 @@ jobs:
           distribution: 'temurin'
           java-version: '19'
 
-      - name: Get PR Number
-        id: get_pr_number
-        uses: actions/github-script@v5
-        with:
-          script: |
-            return context.github.event.check_run.pull_requests[0].number;
-
       - id: download-artifact
         name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: actions_build.yml
           workflow_conclusion: ''
-          pr: ${{ steps.get_pr_number.outputs.result }}
+          pr: ${{ github.event.check_run.pull_requests[0].number }}
           name: build-scan-.*
           name_is_regexp: true
           path: build_scans
@@ -63,7 +56,7 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const prNumber = ${{ steps.get_pr_number.outputs.result }}
+            const prNumber = ${{ github.event.check_run.pull_requests[0].number }}
 
             const scans = ${{ steps.upload-build-scans.outputs.scans }}
             const comments = await github.rest.pulls.listComments({
