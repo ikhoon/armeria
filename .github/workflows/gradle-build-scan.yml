@@ -31,14 +31,6 @@ jobs:
         with:
           script: |
             console.log("check run: " + github.event.check_run);
-#            const pr = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-#              owner: context.repo.owner,
-#              repo: context.repo.repo,
-#              commit_sha: github.event.check_run.head_sha,
-#            });
-#            console.log("PR : " + pr);
-#            const prNumber = pr.data[0].number;
-#            console.log("PR number: " + prNumber);
             return 37;
 
       - id: download-artifact
