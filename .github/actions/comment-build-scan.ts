@@ -39,7 +39,7 @@ async function main(): Promise<void> {
     issue_number: prNumber,
   })
 
-  let commentBody = `## 🔍 Gradle build scans (commit: ${process.env.SHA})\n\n`;
+  let commentBody = `## 🔍 Gradle Scan® (commit: ${process.env.SHA})\n\n`;
   for (const scan of scans) {
     // scan string pattern: "build-scan-<job-name> https://ge.armeria.dev/xxxxxx"
     const tokens = scan.split(" ");

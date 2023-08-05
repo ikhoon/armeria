@@ -57,19 +57,17 @@ jobs:
           DOWNLOAD_DIR="build/build-scans/"
           BUILD_SCAN_DIR="${HOME}/.gradle/build-scan-data"
           BUILD_SCANS=""
-          echo "## download dir: $DOWNLOAD_DIR"
-          ls -al $DOWNLOAD_DIR
+          echo "## Gradle Scans®" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           mkdir -p $BUILD_SCAN_DIR
-          for scan in $(ls $DOWNLOAD_DIR) ; do
+          for SCAN in $(ls $DOWNLOAD_DIR) ; do
             rm -rf $BUILD_SCAN_DIR
-            cp -r "${DOWNLOAD_DIR}${scan}/" $BUILD_SCAN_DIR
+            cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
-            BUILD_SCANS="$scan $(cat build/build-scan-url.txt)"$'\n'"${BUILD_SCANS}"
+            BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt)"$'\n'"${BUILD_SCANS}"
+            echo "- [${SCAN}]($(cat build/build-scan-url.txt))"$'\n' >> $GITHUB_STEP_SUMMARY
           done
           echo "BUILD_SCANS=${BUILD_SCANS}" >> "$GITHUB_OUTPUT"
-          echo "### Gradle build scans" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo $BUILD_SCANS | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
         shell: bash
 
       - name: Setup Node.js
