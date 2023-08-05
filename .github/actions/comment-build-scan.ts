@@ -26,6 +26,12 @@ async function main(): Promise<void> {
   const owner = 'ikhoon';
   const repo = 'armeria';
 
+  const jobs = (await octokit.rest.actions.listJobsForWorkflowRun({
+    owner: owner,
+    repo: repo,
+    run_id: parseInt(process.env.RUN_ID),
+  })).data.jobs;
+
   const comments = await octokit.rest.issues.listComments({
     owner,
     repo,
@@ -34,19 +40,15 @@ async function main(): Promise<void> {
 
   let commentBody = `#### 🔍 Gradle build scans (commit: ${process.env.SHA})\n\n`;
   for (const scan of scans) {
-    // scan string pattern: "build-scan-<job-id> https://ge.armeria.dev/xxxxxx"
+    // scan string pattern: "build-scan-<job-name> https://ge.armeria.dev/xxxxxx"
     const tokens = scan.split(" ");
-    const jobId = tokens[0].replace("build-scan-", "")
+    const jobName = tokens[0].replace("build-scan-", "")
+    const job = jobs.find(job => job.name === jobName);
     const scanUrl = tokens[1];
-    const job = await octokit.rest.actions.getJobForWorkflowRun({
-      owner: owner,
-      repo: repo,
-      job_id: parseInt(jobId)
-    });
-    if (job.data.conclusion === 'success') {
-      commentBody += `✅ [${job.data.name}](${job.data.url}) - ${scanUrl}\n`;
+    if (job.conclusion === 'success') {
+      commentBody += `✅ [${job.name}](${job.url}) - ${scanUrl}\n`;
     } else {
-      commentBody += `❌ [${job.data.name}](${job.data.url}) (${job.data.conclusion}) - ${scanUrl}\n`;
+      commentBody += `❌ [${job.name}](${job.url}) (${job.conclusion}) - ${scanUrl}\n`;
     }
   }
 
