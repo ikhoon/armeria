@@ -82,5 +82,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_SCANS: ${{ steps.upload-build-scans.outputs.BUILD_SCANS }}
-          SHA: ${{ github.sha }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
 #          RUN_ID: ${{ steps.get-run-id.outputs.CHECK_RUN_ID }}
