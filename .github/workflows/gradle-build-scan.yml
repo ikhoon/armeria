@@ -60,7 +60,7 @@ jobs:
             cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
             find $BUILD_SCAN_DIR
             echo "📤 Uploading build scan: ${SCAN} ..."
-            ./gradlew --no-daemon --stacktrace buildScanPublishPrevious || true
+            ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious || true
             echo "✅ Published build scan: ${SCAN}"
             BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt)"$'\n'"${BUILD_SCANS}"
             echo "- [${SCAN}]($(cat build/build-scan-url.txt))" >> $GITHUB_STEP_SUMMARY
