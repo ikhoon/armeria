@@ -28,7 +28,10 @@ gradleEnterprise {
                 }
                 scanUrl.newWriter().withWriter { w -> w << "${scan.buildScanUri}" }
             }
+
+            link("PR", "https://github.com/line/armeria/pull/${System.getenv("PR_NUMBER")}")
         }
+
         capture {
             taskInputFiles = true
         }
