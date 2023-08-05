@@ -30,15 +30,6 @@ jobs:
           distribution: 'temurin'
           java-version: '19'
 
-#      - id: get-run-id
-#        name: Get run ID
-#        run: |
-#          gh pr checks ${{ github.event.check_run.pull_requests[0].number }} -R ikhoon/armeria | \
-#          grep runs | \
-#          head -n 1 | \
-#          sed 's/.*runs\/\([0-9]*\)\/.*/CHECK_RUN_ID=\1/' >> "$GITHUB_OUTPUT" || true
-#        shell: bash
-
       - name: Download artifact
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
@@ -86,4 +77,3 @@ jobs:
           BUILD_SCANS: ${{ steps.upload-build-scans.outputs.BUILD_SCANS }}
           SHA: ${{ github.sha }}
 #          RUN_ID: ${{ steps.get-run-id.outputs.CHECK_RUN_ID }}
-          PR_NUMBER: ${{ github.event.check_run.pull_requests[0].number }}

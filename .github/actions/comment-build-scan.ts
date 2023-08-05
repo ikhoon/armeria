@@ -19,19 +19,35 @@ import { Octokit } from 'octokit';
 main();
 
 async function main(): Promise<void> {
-  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-
-  const prNumber = parseInt(process.env.PR_NUMBER);
+  const octokit = new Octokit({auth: process.env.GITHUB_TOKEN});
   const scans = process.env.BUILD_SCANS.split("\n");
   // TODO(ikhoon): Convert to line/armeria
   const owner = 'ikhoon';
   const repo = 'armeria';
 
-  const jobs = (await octokit.rest.actions.listJobsForWorkflowRun({
+  const {data: {check_suites}} = await octokit.rest.checks.listSuitesForRef({
+    owner: owner,
+    repo: repo,
+    ref: process.env.SHA,
+  });
+
+  let prNumber = 0;
+  for (const item of check_suites) {
+    if (item.pull_requests.length > 0) {
+      prNumber = item.pull_requests[0].number;
+      break;
+    }
+  }
+  if (prNumber === 0) {
+    // The build is not triggered by a pull request.
+    return;
+  }
+
+  const {data: {jobs}} = await octokit.rest.actions.listJobsForWorkflowRun({
     owner: owner,
     repo: repo,
     run_id: parseInt(process.env.RUN_ID),
-  })).data.jobs;
+  });
 
   const comments = await octokit.rest.issues.listComments({
     owner,
