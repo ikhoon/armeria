@@ -62,7 +62,7 @@ jobs:
             echo "📤 Uploading build scan: ${SCAN} ..."
             ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious || true
             echo "✅ Published build scan: ${SCAN}"
-            BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt)"$'\n'"${BUILD_SCANS}"
+            BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt),${BUILD_SCANS}"
             echo "- [${SCAN}]($(cat build/build-scan-url.txt))" >> $GITHUB_STEP_SUMMARY
           done
           echo "BUILD_SCANS=${BUILD_SCANS}" >> "$GITHUB_OUTPUT"
