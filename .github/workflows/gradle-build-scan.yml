@@ -51,14 +51,14 @@ jobs:
           DOWNLOAD_DIR="build-scans/"
           BUILD_SCAN_DIR="${HOME}/.gradle/build-scan-data"
           BUILD_SCANS=""
-          mkdir -p $BUILD_SCAN_DIR
           
           echo "## Build Scans®" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
+            mkdir -p $BUILD_SCAN_DIR
             echo "🚚 Copying build scan: ${DOWNLOAD_DIR}${SCAN}/ to $BUILD_SCAN_DIR ..."
-            cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
+            cp -r ${DOWNLOAD_DIR}${SCAN}/* $BUILD_SCAN_DIR
             find $BUILD_SCAN_DIR
           
             echo "📤 Uploading build scan: ${SCAN} ..."
