@@ -42,7 +42,7 @@ jobs:
           check_artifacts: true
           search_artifacts: true
 
-      # TODO(ikhoon): Remove '|| true' in the Gradle command when Gradle can publish a build scan with JDK 8.
+      # TODO(ikhoon): Remove '|| true' in the Gradle command when a build scan with JDK 8 can be published.
       # https://github.com/ikhoon/armeria/actions/runs/5771371947/job/15645266819#step:5:261
       - id: upload-build-scans
         name: Upload build scans
