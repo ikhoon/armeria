@@ -38,7 +38,7 @@ jobs:
           run_id: ${{ env.RUN_ID }}
           name: build-scan.*
           name_is_regexp: true
-          path: build/build-scans
+          path: build-scans
           check_artifacts: true
           search_artifacts: true
 
@@ -47,7 +47,7 @@ jobs:
       - id: upload-build-scans
         name: Upload build scans
         run: |
-          DOWNLOAD_DIR="build/build-scans/"
+          DOWNLOAD_DIR="build-scans/"
           BUILD_SCAN_DIR="${HOME}/.gradle/build-scan-data"
           BUILD_SCANS=""
           echo "## Build Scans®" >> $GITHUB_STEP_SUMMARY
