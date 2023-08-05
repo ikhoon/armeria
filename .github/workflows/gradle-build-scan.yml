@@ -1,8 +1,10 @@
 name: Upload Gradle build scans to ge.armeria.dev
 
 on:
-  check_run:
-    types: [ completed ]
+  workflow_run:
+    workflows: ["actions_build.yml"]
+    types:
+      - completed
 
 env:
   LC_ALL: "en_US.UTF-8"
@@ -67,7 +69,7 @@ jobs:
             rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${scan}/" $BUILD_SCAN_DIR
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
-            BUILD_SCANS="$scan $(cat build/build-scan-url.txt)"$'\n'${BUILD_SCANS}"
+            BUILD_SCANS="$scan $(cat build/build-scan-url.txt)"$'\n'"${BUILD_SCANS}"
           done
           echo "BUILD_SCANS=${BUILD_SCANS}" >> "$GITHUB_OUTPUT"
           echo "### Gradle build scans" >> $GITHUB_STEP_SUMMARY
