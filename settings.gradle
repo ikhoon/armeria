@@ -13,6 +13,8 @@ plugins {
 
 import com.gradle.scan.plugin.PublishedBuildScan
 
+logger.quiet("## Gradle user home: ${gradle.gradleUserHomeDir}")
+
 gradleEnterprise {
     server = "https://ge.armeria.dev"
     buildScan {
