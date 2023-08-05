@@ -2,7 +2,7 @@ name: Upload Gradle build scans to ge.armeria.dev
 
 on:
   workflow_run:
-    workflows: ["actions_build.yml"]
+    workflows: [CI]
     types:
       - completed
 
@@ -36,12 +36,6 @@ jobs:
           grep runs | \
           head -n 1 | \
           sed 's/.*runs\/\([0-9]*\)\/.*/CHECK_RUN_ID=\1/' >> "$GITHUB_OUTPUT" || true
-        shell: bash
-
-      - id: sleep
-        name: Wait for artifacts to be updated
-        # TODO(ikhoon): Back to 120 seconds after testing
-        run: sleep 40
         shell: bash
 
       - name: Download artifact
