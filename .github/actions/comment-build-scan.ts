@@ -19,7 +19,7 @@ import { Octokit } from 'octokit';
 main();
 
 async function main(): Promise<void> {
-  const octokit = new Octokit();
+  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   const prNumber = parseInt(process.env.PR_NUMBER);
   const scans = process.env.BUILD_SCANS.split("\n");
@@ -38,13 +38,13 @@ async function main(): Promise<void> {
     issue_number: prNumber,
   })
 
-  let commentBody = `#### 🔍 Gradle build scans (commit: ${process.env.SHA})\n\n`;
+  let commentBody = `## 🔍 Gradle build scans (commit: ${process.env.SHA})\n\n`;
   for (const scan of scans) {
     // scan string pattern: "build-scan-<job-name> https://ge.armeria.dev/xxxxxx"
     const tokens = scan.split(" ");
     const jobName = tokens[0].replace("build-scan-", "")
     const job = jobs.find(job => job.name === jobName);
-    const scanUrl = tokens[1];
+    const scanUrl = tokens[1].trim();
     if (job.conclusion === 'success') {
       commentBody += `✅ [${job.name}](${job.url}) - ${scanUrl}\n`;
     } else {
