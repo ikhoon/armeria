@@ -61,6 +61,9 @@ async function main(): Promise<void> {
 
   let commentBody = `## 🔍 Build Scan® (commit: ${process.env.SHA})\n\n`;
   for (const scan of scans) {
+    if (scan.trim().length === 0) {
+      continue;
+    }
     // scan string pattern: "build-scan-<job-name> https://ge.armeria.dev/xxxxxx"
     const tokens = scan.split(" ");
     const jobName = tokens[0].replace("build-scan-", "")
