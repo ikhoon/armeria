@@ -108,9 +108,10 @@ jobs:
 #        shell: bash
 
       - name: Upload Gradle build scan
+        if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: build-scan-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}
+          name: build-scan-${{ github.job }}
           path: ~/.gradle/build-scan-data
 
       - if: ${{ matrix.snapshot && github.ref_name == 'main' }}

@@ -45,7 +45,7 @@ jobs:
       - id: sleep
         name: Wait for artifacts to be updated
         # TODO(ikhoon): Back to 120 seconds after testing
-        run: sleep 30
+        run: sleep 40
         shell: bash
 
       - name: Download artifact
@@ -78,10 +78,8 @@ jobs:
         name: Upload build scans
         run: |
           DOWNLOAD_DIR="build/build-scans/"
-          echo "GRADLE_USER_HOME=${HOME}/.gradle" >> $GITHUB_ENV
-          echo "Gradle home: $GRADLE_USER_HOME"
           BUILD_SCAN_DIR="${HOME}/.gradle/build-scan-data"
-          SCANS=""
+          BUILD_SCANS=""
           echo "## download dir: $DOWNLOAD_DIR"
           ls -al $DOWNLOAD_DIR
           mkdir -p $BUILD_SCAN_DIR
@@ -89,40 +87,24 @@ jobs:
             rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${scan}/" $BUILD_SCAN_DIR
             echo "## scan: $scan"
-            ls -al $BUILD_SCAN_DIR
-            find $BUILD_SCAN_DIR
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
-            SCANS="- scan: $(cat build/build-scan-url.txt)\n${SCANS}"
+            BUILD_SCANS="$scan $(cat build/build-scan-url.txt)\n${BUILD_SCANS}"
           done
-          echo "SCANS=${SCANS}" >> "$GITHUB_OUTPUT"
+          echo "BUILD_SCANS=${BUILD_SCANS}" >> "$GITHUB_OUTPUT"
         shell: bash
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
 
       - id: create-or-update-comment
         name: Create or update comment
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const prNumber = ${{ github.event.check_run.pull_requests[0].number }}
-            const scans = "${{ steps.upload-build-scans.outputs.SCANS }}"
-            const comments = await github.rest.issues.listComments({
-              ...context.repo,
-              issue_number: prNumber,
-            })
-            const scanComment = comments.data.find(comment => comment.body.includes('Gradle build scans'))
-
-            const commentBody = `#### 🔍 Gradle build scans (commit: ${{ github.sha }})\n\n${scans}`;
-            if (scanComment) {
-              // Update the previous comment
-              await github.rest.issues.updateComment({
-                ...context.repo,
-                comment_id: scanComment.id,
-                body: commentBody
-              })
-            } else {
-              // If no previous comment, create a new one
-              await github.rest.issues.createComment({
-                ...context.repo,
-                issue_number: prNumber,
-                body: commentBody
-              })
-            }
+        run: |
+          export NVM_DIR=~/.nvm
+          source ~/.nvm/nvm.sh
+          npm install
+          npm run comment-build-scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_SCANS: ${{ steps.upload-build-scans.outputs.SCANS }}
+          SHA: ${{ github.sha }}
+          PR_NUMBER: ${{ github.event.check_run.pull_requests[0].number }}
