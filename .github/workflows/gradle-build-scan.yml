@@ -36,12 +36,6 @@ jobs:
           sed 's/.*runs\/\([0-9]*\)\/.*/CHECK_RUN_ID=\1/' >> "$GITHUB_OUTPUT" || true
         shell: bash
 
-#      - id: download-artifacts
-#        name: Download artifacts
-#        run: |
-#          gh run download ${{ steps.get-run-id.outputs.CHECK_RUN_ID }} -R ikhoon/armeria -D build_scans
-#        shell: bash
-
       - id: sleep
         name: Wait for artifacts to be updated
         # TODO(ikhoon): Back to 120 seconds after testing
@@ -68,11 +62,6 @@ jobs:
           # Optional, search for the last workflow run whose stored an artifact named as in `name` input
           # default false
           search_artifacts: true
-
-      - name: ls
-        id: ls
-        run: ls
-        shell: bash
 
       - id: upload-build-scans
         name: Upload build scans

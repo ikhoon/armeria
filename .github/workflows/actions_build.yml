@@ -52,7 +52,14 @@ jobs:
             # blockhound makes the build run about 10 minutes slower
             blockhound: true
 
+    name: bulid-jdk-${{ matrix.java }}${{ matrix.min-java && format('-min-java-{0}', matrix.min-java) || '' }}-${{ matrix.on }}${{ matrix.leak && '-leak' || ''}}${{ matrix.coverage && '-coverage' || ''}}${{ matrix.snapshot && '-snapshot' || ''}}${{ matrix.blockhound && '-blockhound' || ''}}
+
     steps:
+      - name: Set job name
+        run: |
+          JOB_NAME="bulid-jdk-${{ matrix.java }}${{ matrix.min-java && format('-min-java-{0}', matrix.min-java) || '' }}-${{ matrix.on }}${{ matrix.leak && '-leak' || ''}}${{ matrix.coverage && '-coverage' || ''}}${{ matrix.snapshot && '-snapshot' || ''}}${{ matrix.blockhound && '-blockhound' || ''}}"
+          echo "JOB_NAME=$JOB_NAME" >> $GITHUB_ENV
+
       - uses: actions/checkout@v2
 
       - id: setup-jdk
@@ -111,7 +118,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: build-scan-${{ github.job }}
+          name: build-scan-${{ env.JOB_NAME }}
           path: ~/.gradle/build-scan-data
 
       - if: ${{ matrix.snapshot && github.ref_name == 'main' }}
@@ -181,15 +188,15 @@ jobs:
           -path '*/build/test-results' -or \
           -path '*/javadoc.options' -or \
           -name 'blockhound.log' ')' \
-          -exec tar rf "reports-JVM-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}.tar" {} ';'
+          -exec tar rf "reports-${{ env.JOB_NAME }}.tar" {} ';'
         shell: bash
 
       - name: Upload the artifacts
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: reports-JVM-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}
-          path: reports-JVM-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}.tar
+          name: reports-${{ env.JOB_NAME }}
+          path: reports-${{ env.JOB_NAME }}.tar
           retention-days: 3
 
   lint:
