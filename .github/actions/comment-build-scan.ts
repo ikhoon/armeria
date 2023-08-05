@@ -25,6 +25,7 @@ async function main(): Promise<void> {
   const owner = 'ikhoon';
   const repo = 'armeria';
 
+  console.log(`💻 Getting pull request number for ${process.env.SHA}...`)
   const {data: {check_suites}} = await octokit.rest.checks.listSuitesForRef({
     owner: owner,
     repo: repo,
@@ -40,15 +41,18 @@ async function main(): Promise<void> {
   }
   if (prNumber === 0) {
     // The build is not triggered by a pull request.
+    console.log("⌀ No pull request found. Skip creating a scan comment.");
     return;
   }
 
+  console.log(`💻 Getting jobs for ${process.env.RUN_ID} ...`)
   const {data: {jobs}} = await octokit.rest.actions.listJobsForWorkflowRun({
     owner: owner,
     repo: repo,
     run_id: parseInt(process.env.RUN_ID),
   });
 
+  console.log(`💻 Getting comments for #${prNumber} ...`)
   const comments = await octokit.rest.issues.listComments({
     owner,
     repo,
@@ -73,6 +77,7 @@ async function main(): Promise<void> {
     comment.user.login === "github-actions[bot]" && comment.body.includes('Build scans®'))
   if (scanComment) {
     // Update the previous comment
+    console.log(`📝 Updating the previous comment: ${scanComment.html_url} ...`)
     await octokit.rest.issues.updateComment({
       owner,
       repo,
@@ -81,11 +86,13 @@ async function main(): Promise<void> {
     })
   } else {
     // If no previous comment, create a new one
-    await octokit.rest.issues.createComment({
+    console.log(`📝 Creating a new comment for #${prNumber} ...`)
+    const { data: newComment } = await octokit.rest.issues.createComment({
       owner,
       repo,
       issue_number: prNumber,
       body: commentBody
     })
+    console.log(`💬 A new comment has been created: ${newComment.html_url}`)
   }
 }
