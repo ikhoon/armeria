@@ -88,6 +88,7 @@ jobs:
             cp -r "${DOWNLOAD_DIR}${scan}/" $BUILD_SCAN_DIR
             echo "## scan: $scan"
             ls -al $BUILD_SCAN_DIR
+            find $BUILD_SCAN_DIR
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
             SCANS="- scan: $(cat build/build-scan-url.txt)\n${SCANS}"
           done
