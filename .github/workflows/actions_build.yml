@@ -60,6 +60,7 @@ jobs:
         run: |
           JOB_NAME="bulid-${{ matrix.on }}-jdk-${{ matrix.java }}${{ matrix.min-java && format('-min-java-{0}', matrix.min-java) || '' }}${{ matrix.leak && '-leak' || ''}}${{ matrix.coverage && '-coverage' || ''}}${{ matrix.snapshot && '-snapshot' || ''}}${{ matrix.blockhound && '-blockhound' || ''}}"
           echo "JOB_NAME=$JOB_NAME" >> $GITHUB_ENV
+        shell: bash
 
       - uses: actions/checkout@v2
 
