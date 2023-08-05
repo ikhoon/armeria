@@ -31,7 +31,6 @@ async function main(): Promise<void> {
     repo,
     issue_number: prNumber,
   })
-  const scanComment = comments.data.find(comment => comment.body.includes('Gradle build scans'))
 
   let commentBody = `#### 🔍 Gradle build scans (commit: ${process.env.SHA})\n\n`;
   for (const scan of scans) {
@@ -51,6 +50,8 @@ async function main(): Promise<void> {
     }
   }
 
+  const scanComment = comments.data.find(comment =>
+    comment.user.login === "github-actions[bot]" && comment.body.includes('Gradle build scans'))
   if (scanComment) {
     // Update the previous comment
     await octokit.rest.issues.updateComment({
