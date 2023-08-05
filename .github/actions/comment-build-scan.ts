@@ -20,7 +20,7 @@ main();
 
 async function main(): Promise<void> {
   const octokit = new Octokit({auth: process.env.GITHUB_TOKEN});
-  const scans = process.env.BUILD_SCANS.split("\n");
+  const scans = process.env.BUILD_SCANS.split(",");
   // TODO(ikhoon): Convert to line/armeria
   const owner = 'ikhoon';
   const repo = 'armeria';
