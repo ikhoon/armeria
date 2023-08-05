@@ -80,10 +80,14 @@ jobs:
           DOWNLOAD_DIR="build/build-scans/"
           BUILD_SCAN_DIR="~/.gradle/build-scan-data"
           SCANS=""
+          echo "## download dir: $DOWNLOAD_DIR"
+          ls -al $DOWNLOAD_DIR
           mkdir -p $BUILD_SCAN_DIR
           for scan in $(ls $DOWNLOAD_DIR) ; do
             rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${scan}/" $BUILD_SCAN_DIR
+            echo "## scan: $scan"
+            ls -al $BUILD_SCAN_DIR
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
             SCANS="- scan: $(cat build/build-scan-url.txt)\n${SCANS}"
           done
@@ -101,9 +105,9 @@ jobs:
               ...context.repo,
               issue_number: prNumber,
             })
-            const scanComment = comments.data.find(comment => comment.body.includes('### Gradle build scans'))
+            const scanComment = comments.data.find(comment => comment.body.includes('Gradle build scans'))
 
-            const commentBody = `### Gradle build scans (commit: ${{ github.sha }})\n\n${scans}`;
+            const commentBody = `#### 🔍 Gradle build scans (commit: ${{ github.sha }})\n\n${scans}`;
             if (scanComment) {
               // Update the previous comment
               await github.rest.issues.updateComment({
