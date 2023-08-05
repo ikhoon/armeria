@@ -98,6 +98,7 @@ jobs:
 
       - id: create-or-update-comment
         name: Create or update comment
+        working-directory: .github/actions
         run: |
           export NVM_DIR=~/.nvm
           source ~/.nvm/nvm.sh
