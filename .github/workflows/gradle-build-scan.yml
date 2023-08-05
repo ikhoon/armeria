@@ -56,7 +56,8 @@ jobs:
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
             rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
-            echo "↩️ Previous build scan: ${SCAN}"
+            find $BUILD_SCAN_DIR
+            echo "📤 Uploading build scan: ${SCAN} ..."
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious || true
             echo "✅ Published build scan: ${SCAN}"
             BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt)"$'\n'"${BUILD_SCANS}"
