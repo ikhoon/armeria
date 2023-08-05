@@ -79,6 +79,7 @@ jobs:
         run: |
           echo "Gradle home: $GRADLE_USER_HOME"
           DOWNLOAD_DIR="build/build-scans/"
+          echo "GRADLE_USER_HOME=${HOME}/.gradle" >> $GITHUB_ENV
           BUILD_SCAN_DIR="~/.gradle/build-scan-data"
           SCANS=""
           echo "## download dir: $DOWNLOAD_DIR"
