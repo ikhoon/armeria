@@ -12,7 +12,7 @@ env:
   ACTIONS_STEP_DEBUG: true
   GH_TOKEN: ${{ github.token }}
   GH_DEBUG: true
-  RUN_ID: ${{ context.payload.workflow_run.id }}
+  RUN_ID: ${{ github.event.workflow_run.id }}
 
 jobs:
   upload-gradle-build-scan:
