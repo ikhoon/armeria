@@ -50,13 +50,15 @@ jobs:
           DOWNLOAD_DIR="build/build-scans/"
           BUILD_SCAN_DIR="${HOME}/.gradle/build-scan-data"
           BUILD_SCANS=""
-          echo "## Gradle Scans®" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Scans®" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           mkdir -p $BUILD_SCAN_DIR
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
             rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
+            echo "↩️ Previous build scan: ${SCAN}"
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious || true
+            echo "✅ Published build scan: ${SCAN}"
             BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt)"$'\n'"${BUILD_SCANS}"
             echo "- [${SCAN}]($(cat build/build-scan-url.txt))" >> $GITHUB_STEP_SUMMARY
           done
