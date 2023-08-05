@@ -108,4 +108,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_SCANS: ${{ steps.upload-build-scans.outputs.BUILD_SCANS }}
           SHA: ${{ github.sha }}
+          RUN_ID: ${{ steps.get-run-id.outputs.CHECK_RUN_ID }}
           PR_NUMBER: ${{ github.event.check_run.pull_requests[0].number }}
