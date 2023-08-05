@@ -54,6 +54,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           mkdir -p $BUILD_SCAN_DIR
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
+            echo "🎬 Start build scan: ${SCAN}"
+            find "${DOWNLOAD_DIR}${SCAN}/"
             rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
             find $BUILD_SCAN_DIR
