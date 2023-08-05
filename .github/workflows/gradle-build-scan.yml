@@ -23,12 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - id: setup-jdk-17
-        name: Set up JDK 17
+      - id: setup-jdk-19
+        name: Set up JDK 19
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '19'
 
       - name: Download artifact
         id: download-artifact
@@ -42,29 +42,33 @@ jobs:
           check_artifacts: true
           search_artifacts: true
 
-      # TODO(ikhoon): Remove '|| true' in the Gradle command when a build scan with JDK 8 can be published.
-      # https://github.com/ikhoon/armeria/actions/runs/5771371947/job/15645266819#step:5:261
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
       - id: upload-build-scans
         name: Upload build scans
         run: |
           DOWNLOAD_DIR="build-scans/"
           BUILD_SCAN_DIR="${HOME}/.gradle/build-scan-data"
           BUILD_SCANS=""
+          mkdir -p $BUILD_SCAN_DIR
+          
           echo "## Build Scans®" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          mkdir -p $BUILD_SCAN_DIR
+          
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
-            echo "🎬 Start build scan: ${SCAN}"
-            find "${DOWNLOAD_DIR}${SCAN}/"
-            rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
-            find $BUILD_SCAN_DIR
+          
             echo "📤 Uploading build scan: ${SCAN} ..."
-            ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious || true
+            ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious
             echo "✅ Published build scan: ${SCAN}"
+          
             BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt),${BUILD_SCANS}"
             echo "- [${SCAN}]($(cat build/build-scan-url.txt))" >> $GITHUB_STEP_SUMMARY
+          
+            rm -rf $BUILD_SCAN_DIR
           done
+          
           echo "BUILD_SCANS=${BUILD_SCANS}" >> "$GITHUB_OUTPUT"
         shell: bash
 
@@ -83,4 +87,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_SCANS: ${{ steps.upload-build-scans.outputs.BUILD_SCANS }}
           SHA: ${{ github.event.workflow_run.head_sha }}
-#          RUN_ID: ${{ steps.get-run-id.outputs.CHECK_RUN_ID }}
