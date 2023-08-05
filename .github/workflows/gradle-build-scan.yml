@@ -44,7 +44,8 @@ jobs:
 
       - id: sleep
         name: Wait for artifacts to be updated
-        run: sleep 120
+        # TODO(ikhoon): Back to 120 seconds after testing
+        run: sleep 60
         shell: bash
 
       - name: Download artifact
@@ -80,7 +81,7 @@ jobs:
           BUILD_SCAN_DIR="~/.gradle/build-scan-data"
           SCANS=""
           mkdir -p $BUILD_SCAN_DIR
-          for scan in $(ls DOWNLOAD_DIR) ; do
+          for scan in $(ls $DOWNLOAD_DIR) ; do
             rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${scan}/" $BUILD_SCAN_DIR
             ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
