@@ -34,9 +34,9 @@ async function main(): Promise<void> {
 
   let commentBody = `#### 🔍 Gradle build scans (commit: ${process.env.SHA})\n\n`;
   for (const scan of scans) {
-    // scan string pattern: "build_scan_<job-id> https://ge.armeria.dev/xxxxxx"
+    // scan string pattern: "build-scan-<job-id> https://ge.armeria.dev/xxxxxx"
     const tokens = scan.split(" ");
-    const jobId = tokens[0].replace("build_scan_", "")
+    const jobId = tokens[0].replace("build-scan-", "")
     const scanUrl = tokens[1];
     const job = await octokit.rest.actions.getJobForWorkflowRun({
       owner: owner,
