@@ -22,36 +22,45 @@ env:
 
 jobs:
   build:
-    if: github.repository == 'line/armeria'
+    # TODO(ikhoon): Uncomment this after testing
+#    if: github.repository == 'line/armeria'
     runs-on: ${{ matrix.on }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        on: [ self-hosted, macos-12, windows-latest ]
+        # TODO(ikhoon): Revert to self-hosted runners
+        on: [ ubuntu-latest, macos-12, windows-latest ]
         java: [ 19 ]
         include:
           - java: 8
-            on: self-hosted
+            on: ubuntu-latest
           - java: 11
-            on: self-hosted
+            on: ubuntu-latest
           - java: 17
-            on: self-hosted
+            on: ubuntu-latest
             leak: true
           - java: 17
-            on: self-hosted
+            on: ubuntu-latest
             min-java: 11
           - java: 17
-            on: self-hosted
+            on: ubuntu-latest
             min-java: 17
             coverage: true
           - java: 19
-            on: self-hosted
+            on: ubuntu-latest
             snapshot: true
             # blockhound makes the build run about 10 minutes slower
             blockhound: true
 
+    name: build-${{ matrix.on }}-jdk-${{ matrix.java }}${{ matrix.min-java && format('-min-java-{0}', matrix.min-java) || '' }}${{ matrix.leak && '-leak' || ''}}${{ matrix.coverage && '-coverage' || ''}}${{ matrix.snapshot && '-snapshot' || ''}}${{ matrix.blockhound && '-blockhound' || ''}}
+
     steps:
+      - name: Set job name
+        run: |
+          JOB_NAME="bulid-${{ matrix.on }}-jdk-${{ matrix.java }}${{ matrix.min-java && format('-min-java-{0}', matrix.min-java) || '' }}${{ matrix.leak && '-leak' || ''}}${{ matrix.coverage && '-coverage' || ''}}${{ matrix.snapshot && '-snapshot' || ''}}${{ matrix.blockhound && '-blockhound' || ''}}"
+          echo "JOB_NAME=$JOB_NAME" >> $GITHUB_ENV
+
       - uses: actions/checkout@v2
 
       - id: setup-jdk
@@ -101,6 +110,13 @@ jobs:
           ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
           -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
         shell: bash
+
+      - name: Upload Gradle build scan
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-scan-${{ env.JOB_NAME }}
+          path: ~/.gradle/build-scan-data
 
       - if: ${{ matrix.snapshot && github.ref_name == 'main' }}
         name: Publish snapshots
@@ -169,20 +185,20 @@ jobs:
           -path '*/build/test-results' -or \
           -path '*/javadoc.options' -or \
           -name 'blockhound.log' ')' \
-          -exec tar rf "reports-JVM-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}.tar" {} ';'
+          -exec tar rf "reports-${{ env.JOB_NAME }}.tar" {} ';'
         shell: bash
 
       - name: Upload the artifacts
         if: failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: reports-JVM-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}
-          path: reports-JVM-${{ matrix.on }}-${{ matrix.java }}${{ matrix.min-java && format('-{0}', matrix.min-java) || '' }}.tar
+          name: reports-${{ env.JOB_NAME }}
+          path: reports-${{ env.JOB_NAME }}.tar
           retention-days: 3
 
   lint:
     if: github.repository == 'line/armeria'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
