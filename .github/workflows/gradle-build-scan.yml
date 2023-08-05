@@ -45,7 +45,7 @@ jobs:
       - id: sleep
         name: Wait for artifacts to be updated
         # TODO(ikhoon): Back to 120 seconds after testing
-        run: sleep 60
+        run: sleep 30
         shell: bash
 
       - name: Download artifact
@@ -80,7 +80,7 @@ jobs:
           DOWNLOAD_DIR="build/build-scans/"
           echo "GRADLE_USER_HOME=${HOME}/.gradle" >> $GITHUB_ENV
           echo "Gradle home: $GRADLE_USER_HOME"
-          BUILD_SCAN_DIR="~/.gradle/build-scan-data"
+          BUILD_SCAN_DIR="${HOME}/.gradle/build-scan-data"
           SCANS=""
           echo "## download dir: $DOWNLOAD_DIR"
           ls -al $DOWNLOAD_DIR
