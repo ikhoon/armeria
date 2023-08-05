@@ -42,6 +42,8 @@ jobs:
           check_artifacts: true
           search_artifacts: true
 
+      # TODO(ikhoon): Remove '|| true' in the Gradle command when Gradle can publish a build scan with JDK 8.
+      # https://github.com/ikhoon/armeria/actions/runs/5771371947/job/15645266819#step:5:261
       - id: upload-build-scans
         name: Upload build scans
         run: |
@@ -54,7 +56,7 @@ jobs:
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
             rm -rf $BUILD_SCAN_DIR
             cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
-            ./gradlew --no-daemon --stacktrace buildScanPublishPrevious
+            ./gradlew --no-daemon --stacktrace buildScanPublishPrevious || true
             BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt)"$'\n'"${BUILD_SCANS}"
             echo "- [${SCAN}]($(cat build/build-scan-url.txt))" >> $GITHUB_STEP_SUMMARY
           done
