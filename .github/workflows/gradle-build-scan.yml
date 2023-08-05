@@ -57,7 +57,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
+            echo "🚚 Copying build scan: ${DOWNLOAD_DIR}${SCAN}/ to $BUILD_SCAN_DIR ..."
             cp -r "${DOWNLOAD_DIR}${SCAN}/" $BUILD_SCAN_DIR
+            find $BUILD_SCAN_DIR
           
             echo "📤 Uploading build scan: ${SCAN} ..."
             ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious
