@@ -9,10 +9,6 @@ on:
 env:
   LC_ALL: "en_US.UTF-8"
   GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-  ACTIONS_STEP_DEBUG: true
-  # Used by GitHub CLI
-  GH_TOKEN: ${{ github.token }}
-  GH_DEBUG: true
   RUN_ID: ${{ github.event.workflow_run.id }}
   COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
   # Used by Octokit
@@ -89,8 +85,6 @@ jobs:
           
           echo "BUILD_SCANS=${BUILD_SCANS}" >> "$GITHUB_OUTPUT"
         shell: bash
-        env:
-          PR_NUMBER: ${{ steps.get-pr-number-by-sha.outputs.pr_number }}
 
       - id: create-or-update-comment
         name: Create or update comment
