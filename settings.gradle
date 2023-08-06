@@ -32,13 +32,11 @@ gradleEnterprise {
             // Add links to GitHub Actions and PR
             def githubUrl = "${System.getenv("GITHUB_SERVER_URL")}/${System.getenv("GITHUB_REPOSITORY")}"
             def prNumber = System.getenv("PR_NUMBER")
-            logger.quiet("PR number: ${prNumber}")
-            logger.quiet("GitHub URL: ${githubUrl}")
             if (prNumber != null) {
-                link "PR", "${githubUrl}/pull/${prNumber}"
+                link "GitHub PR", "${githubUrl}/pull/${prNumber}"
                 def sha = System.getenv("COMMIT_SHA")
                 if (sha != null) {
-                    link "Commit", "${githubUrl}/pull/${prNumber}/commits/${sha}"
+                    link "GitHub commit", "${githubUrl}/pull/${prNumber}/commits/${sha}"
                 }
 
                 def runId = System.getenv("RUN_ID")

@@ -21,6 +21,7 @@ env:
   GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
   # Used by GitHub CLI
   GH_TOKEN: ${{ github.token }}
+  RUN_ID: ${{ github.run_id }}
 
 jobs:
   build:
@@ -104,8 +105,6 @@ jobs:
           JOB_ID=$(gh run view $RUN_ID --json jobs | jq ".jobs[] | select(.name == \"${JOB_NAME}\") | .databaseId")
           echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
         shell: bash
-        env:
-          RUN_ID: ${{ github.run_id }}
 
       - name: Build with Gradle
         run: |
