@@ -111,6 +111,9 @@ jobs:
           ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
           -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
         shell: bash
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ env.GITHUB_SHA }}
 
       - name: Upload Gradle build scan
         if: always()
