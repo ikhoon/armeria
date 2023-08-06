@@ -10,9 +10,13 @@ env:
   LC_ALL: "en_US.UTF-8"
   GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
   ACTIONS_STEP_DEBUG: true
+  # Used by GitHub CLI
   GH_TOKEN: ${{ github.token }}
   GH_DEBUG: true
   RUN_ID: ${{ github.event.workflow_run.id }}
+  SHA: ${{ github.event.workflow_run.head_sha }}
+  # Used by Octokit
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   upload-gradle-build-scan:
@@ -42,6 +46,20 @@ jobs:
           check_artifacts: true
           search_artifacts: true
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+
+      - id: get-pr-number-by-sha
+        name: Get PR number by SHA
+        working-directory: .github/actions
+        run: |
+          export NVM_DIR=~/.nvm
+          source ~/.nvm/nvm.sh
+          npm install
+          npm run get-pr-number-by-sha
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
@@ -52,30 +70,32 @@ jobs:
           BUILD_SCAN_DIR="${HOME}/.gradle/build-scan-data"
           BUILD_SCANS=""
           
-          echo "## Build Scans®" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Scans®" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
             mkdir -p $BUILD_SCAN_DIR
-            echo "🚚 Copying build scan: ${DOWNLOAD_DIR}${SCAN}/ to $BUILD_SCAN_DIR ..."
+            echo "🚰 Copying build scan: ${DOWNLOAD_DIR}${SCAN}/ to $BUILD_SCAN_DIR ..."
             cp -r ${DOWNLOAD_DIR}${SCAN}/* $BUILD_SCAN_DIR
             find $BUILD_SCAN_DIR
           
-            echo "📤 Uploading build scan: ${SCAN} ..."
+            JOB_NAME=$(echo ${SCAN} | sed 's/build-scan-\(.*\)/\1/')
+            export JOB_ID=$(gh run view $RUN_ID --json jobs | jq '.jobs[] | select(.name == "${JOB_NAME}") | .databaseId')
+          
+            echo "📤 Uploading build scan for job ${JOB_NAME} (${JOB_ID}) ..."
             ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious
-            echo "✅ Published build scan: ${SCAN}"
+            echo "✅ Published build scan: ${JOB_NAME} (${JOB_ID})"
           
             BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt),${BUILD_SCANS}"
-            echo "- [${SCAN}]($(cat build/build-scan-url.txt))" >> $GITHUB_STEP_SUMMARY
+            echo "- [${SCAN}]($(cat build/build-scan-url.txt))" >> "$GITHUB_STEP_SUMMARY"
           
             rm -rf $BUILD_SCAN_DIR
           done
           
           echo "BUILD_SCANS=${BUILD_SCANS}" >> "$GITHUB_OUTPUT"
         shell: bash
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+        env:
+          PR_NUMBER: ${{ steps.get-pr-number-by-sha.outputs.pr_number }}
 
       - id: create-or-update-comment
         name: Create or update comment
@@ -83,9 +103,7 @@ jobs:
         run: |
           export NVM_DIR=~/.nvm
           source ~/.nvm/nvm.sh
-          npm install
           npm run comment-build-scan
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_SCANS: ${{ steps.upload-build-scans.outputs.BUILD_SCANS }}
-          SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ steps.get-pr-number-by-sha.outputs.pr_number }}
