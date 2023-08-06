@@ -35,16 +35,16 @@ gradleEnterprise {
             logger.quiet("PR number: ${prNumber}")
             logger.quiet("GitHub URL: ${githubUrl}")
             if (prNumber != null) {
-                link("PR", "${githubUrl}/pull/${prNumber}")
+                link "PR", "${githubUrl}/pull/${prNumber}"
             }
             def sha = System.getenv("SHA")
             if (sha != null) {
-                link("Commit", "${githubUrl}/pull/${prNumber}/commits/${sha}")
+                link "Commit", "${githubUrl}/pull/${prNumber}/commits/${sha}"
             }
             def runId = System.getenv("RUN_ID")
             def jobId = System.getenv("JOB_ID")
             if (runId != null && jobId != null) {
-                link("GitHub Actions job", "${githubUrl}/actions/runs/${runId}/job/${jobId}?pr=${prNumber}")
+                link "GitHub Actions job", "${githubUrl}/actions/runs/${runId}/job/${jobId}?pr=${prNumber}"
             }
         }
 
