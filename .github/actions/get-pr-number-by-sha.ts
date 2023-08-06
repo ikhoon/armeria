@@ -39,10 +39,10 @@ async function main(): Promise<void> {
   }
   if (prNumber === 0) {
     // The build is not triggered by a pull request.
-    console.log("No pull request found.");
+    console.log("❔ No pull request found.");
     return;
   } else {
-    console.log(`💻 Pull request number: ${prNumber}`);
+    console.log(`✅ Pull request number: ${prNumber}`);
     core.setOutput("pr_number", prNumber);
   }
 }
