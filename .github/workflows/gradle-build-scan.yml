@@ -14,7 +14,7 @@ env:
   GH_TOKEN: ${{ github.token }}
   GH_DEBUG: true
   RUN_ID: ${{ github.event.workflow_run.id }}
-  SHA: ${{ github.event.workflow_run.head_sha }}
+  COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
   # Used by Octokit
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -57,8 +57,6 @@ jobs:
           source ~/.nvm/nvm.sh
           npm install
           npm run get-pr-number-by-sha
-        env:
-          SHA: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
@@ -75,19 +73,16 @@ jobs:
           
           for SCAN in $(ls $DOWNLOAD_DIR) ; do
             mkdir -p $BUILD_SCAN_DIR
-            echo "🚰 Copying build scan: ${DOWNLOAD_DIR}${SCAN}/ to $BUILD_SCAN_DIR ..."
+            echo "🚚 Copying build scan: ${DOWNLOAD_DIR}${SCAN}/ to $BUILD_SCAN_DIR ..."
             cp -r ${DOWNLOAD_DIR}${SCAN}/* $BUILD_SCAN_DIR
-            find $BUILD_SCAN_DIR
           
             JOB_NAME=$(echo ${SCAN} | sed 's/build-scan-\(.*\)/\1/')
-            export JOB_ID=$(gh run view $RUN_ID --json jobs | jq ".jobs[] | select(.name == \"${JOB_NAME}\") | .databaseId")
-          
-            echo "📤 Uploading build scan for job ${JOB_NAME} (${JOB_ID}) ..."
+            echo "📤 Uploading build scan for job ${JOB_NAME} ..."
             ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious
-            echo "✅ Published build scan: ${JOB_NAME} (${JOB_ID})"
+            echo "✅ Published build scan: ${JOB_NAME}"
           
-            BUILD_SCANS="${SCAN} $(cat build/build-scan-url.txt),${BUILD_SCANS}"
-            echo "- [${SCAN}]($(cat build/build-scan-url.txt))" >> "$GITHUB_STEP_SUMMARY"
+            BUILD_SCANS="${JOB_NAME} $(cat build/build-scan-url.txt),${BUILD_SCANS}"
+            echo "- [${JOB_NAME}]($(cat build/build-scan-url.txt))" >> "$GITHUB_STEP_SUMMARY"
           
             rm -rf $BUILD_SCAN_DIR
           done

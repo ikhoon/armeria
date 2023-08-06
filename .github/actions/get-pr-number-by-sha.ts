@@ -23,11 +23,12 @@ async function main(): Promise<void> {
   const octokit = new Octokit({auth: process.env.GITHUB_TOKEN});
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
-  console.log(`💻 Getting pull request number for ${process.env.SHA} ...`)
+  const sha = process.env.COMMIT_SHA;
+  console.log(`💻 Getting pull request number for ${sha} ...`)
   const {data: {check_suites}} = await octokit.rest.checks.listSuitesForRef({
     owner: owner,
     repo: repo,
-    ref: process.env.SHA,
+    ref: sha,
   });
 
   let prNumber = 0;
