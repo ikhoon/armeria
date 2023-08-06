@@ -98,6 +98,7 @@ jobs:
           PR_NUMBER: ${{ steps.get-pr-number-by-sha.outputs.pr_number }}
 
       - id: create-or-update-comment
+        if: steps.get-pr-number-by-sha.outputs.pr_number
         name: Create or update comment
         working-directory: .github/actions
         run: |
