@@ -98,8 +98,8 @@ jobs:
           PR_NUMBER: ${{ steps.get-pr-number-by-sha.outputs.pr_number }}
 
       - id: create-or-update-comment
-        if: steps.get-pr-number-by-sha.outputs.pr_number
         name: Create or update comment
+        if: steps.get-pr-number-by-sha.outputs.pr_number
         working-directory: .github/actions
         run: |
           export NVM_DIR=~/.nvm
