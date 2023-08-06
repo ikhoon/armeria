@@ -13,6 +13,7 @@ plugins {
 
 import com.gradle.scan.plugin.PublishedBuildScan
 
+logger.quiet("JOBID: ${System.getenv("JOB_ID")}")
 gradleEnterprise {
     server = "https://ge.armeria.dev"
     buildScan {
@@ -29,7 +30,21 @@ gradleEnterprise {
                 scanUrl.newWriter().withWriter { w -> w << "${scan.buildScanUri}" }
             }
 
-            link("PR", "https://github.com/line/armeria/pull/${System.getenv("PR_NUMBER")}")
+            // Add links to GitHub Actions and PR
+            def githubUrl = "${System.getenv("GITHUB_SERVER_URL")}/${System.getenv("GITHUB_REPOSITORY")}"
+            def prNumber = System.getenv("PR_NUMBER")
+            if (prNumber != null) {
+                link("PR", "${githubUrl}/pull/${prNumber}")
+            }
+            def sha = System.getenv("SHA")
+            if (sha != null) {
+                link("commit", "${githubUrl}/pull/${prNumber}/commits/${sha}")
+            }
+            def runId = System.getenv("RUN_ID")
+            def jobId = System.getenv("JOB_ID")
+            if (runId != null && jobId != null) {
+                link("GitHub Actions job", "${githubUrl}/actions/runs/${runId}/job/${jobId}?pr=${prNumber}")
+            }
         }
 
         capture {
