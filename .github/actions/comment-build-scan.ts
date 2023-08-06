@@ -22,9 +22,7 @@ async function main(): Promise<void> {
   const octokit = new Octokit({auth: process.env.GITHUB_TOKEN});
   const scans = process.env.BUILD_SCANS.split(",");
   const prNumber = parseInt(process.env.PR_NUMBER);
-  // TODO(ikhoon): Convert to line/armeria
-  const owner = 'ikhoon';
-  const repo = 'armeria';
+  const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
   console.log(`💻 Getting jobs for ${process.env.RUN_ID} ...`)
   const {data: {jobs}} = await octokit.rest.actions.listJobsForWorkflowRun({
