@@ -80,7 +80,7 @@ jobs:
             find $BUILD_SCAN_DIR
           
             JOB_NAME=$(echo ${SCAN} | sed 's/build-scan-\(.*\)/\1/')
-            export JOB_ID=$(gh run view $RUN_ID --json jobs | jq '.jobs[] | select(.name == "${JOB_NAME}") | .databaseId')
+            export JOB_ID=$(gh run view $RUN_ID --json jobs | jq ".jobs[] | select(.name == \"${JOB_NAME}\") | .databaseId")
           
             echo "📤 Uploading build scan for job ${JOB_NAME} (${JOB_ID}) ..."
             ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious

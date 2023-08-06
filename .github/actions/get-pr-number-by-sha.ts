@@ -21,11 +21,9 @@ main();
 
 async function main(): Promise<void> {
   const octokit = new Octokit({auth: process.env.GITHUB_TOKEN});
-  // TODO(ikhoon): Convert to line/armeria
-  const owner = 'ikhoon';
-  const repo = 'armeria';
+  const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
-  console.log(`💻 Getting pull request number for ${process.env.SHA}...`)
+  console.log(`💻 Getting pull request number for ${process.env.SHA} ...`)
   const {data: {check_suites}} = await octokit.rest.checks.listSuitesForRef({
     owner: owner,
     repo: repo,
