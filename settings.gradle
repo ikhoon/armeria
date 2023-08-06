@@ -13,7 +13,6 @@ plugins {
 
 import com.gradle.scan.plugin.PublishedBuildScan
 
-logger.quiet("JOBID: ${System.getenv("JOB_ID")}")
 gradleEnterprise {
     server = "https://ge.armeria.dev"
     buildScan {
@@ -38,7 +37,7 @@ gradleEnterprise {
             }
             def sha = System.getenv("SHA")
             if (sha != null) {
-                link("commit", "${githubUrl}/pull/${prNumber}/commits/${sha}")
+                link("Commit", "${githubUrl}/pull/${prNumber}/commits/${sha}")
             }
             def runId = System.getenv("RUN_ID")
             def jobId = System.getenv("JOB_ID")
