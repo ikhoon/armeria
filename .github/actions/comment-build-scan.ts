@@ -54,7 +54,7 @@ async function main(): Promise<void> {
   }
 
   const scanComment = comments.data.find(comment =>
-    comment.user.login === "github-actions[bot]" && comment.body.includes('Build Scans®'))
+    comment.user.login === "github-actions[bot]" && comment.body.includes('Build Scan®'))
   if (scanComment) {
     // Update the previous comment
     console.log(`📝 Updating the previous comment: ${scanComment.html_url} ...`)
