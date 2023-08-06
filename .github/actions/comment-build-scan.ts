@@ -20,7 +20,7 @@ main();
 
 async function main(): Promise<void> {
   const octokit = new Octokit({auth: process.env.GITHUB_TOKEN});
-  const scans = process.env.BUILD_SCANS.split(",");
+  const buildScans = process.env.BUILD_SCANS.split(",");
   const prNumber = parseInt(process.env.PR_NUMBER);
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
@@ -38,16 +38,14 @@ async function main(): Promise<void> {
     issue_number: prNumber,
   })
 
-  let commentBody = `## 🔍 Build Scan® (commit: ${process.env.SHA})\n\n`;
-  for (const scan of scans) {
+  let commentBody = `## 🔍 Build Scan® (commit: ${process.env.COMMIT_SHA})\n\n`;
+  for (const scan of buildScans) {
     if (scan.trim().length === 0) {
       continue;
     }
-    // scan string pattern: "build-scan-<job-name> https://ge.armeria.dev/xxxxxx"
-    const tokens = scan.split(" ");
-    const jobName = tokens[0].replace("build-scan-", "")
+    // build scan string pattern: "<job-name> https://ge.armeria.dev/xxxxxx"
+    const [jobName, scanUrl]= scan.split(" ");
     const job = jobs.find(job => job.name === jobName);
-    const scanUrl = tokens[1].trim();
     if (job.conclusion === 'success') {
       commentBody += `✅ [${job.name}](${job.url}) - ${scanUrl}\n`;
     } else {
@@ -56,7 +54,7 @@ async function main(): Promise<void> {
   }
 
   const scanComment = comments.data.find(comment =>
-    comment.user.login === "github-actions[bot]" && comment.body.includes('Build scans®'))
+    comment.user.login === "github-actions[bot]" && comment.body.includes('Build Scans®'))
   if (scanComment) {
     // Update the previous comment
     console.log(`📝 Updating the previous comment: ${scanComment.html_url} ...`)
