@@ -19,6 +19,8 @@ env:
   LC_ALL: "en_US.UTF-8"
   BUILD_JDK_VERSION: "19"
   GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+  # Used by GitHub CLI
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   build:
@@ -95,6 +97,15 @@ jobs:
 #          ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
 #          -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
 #        shell: bash
+
+      - name: Get job ID
+        id: get-job-id
+        run: |
+          JOB_ID=$(gh run view $RUN_ID --json jobs | jq ".jobs[] | select(.name == \"${JOB_NAME}\") | .databaseId")
+          echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
 
       - name: Build with Gradle
         run: |

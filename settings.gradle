@@ -40,7 +40,14 @@ gradleEnterprise {
                 if (sha != null) {
                     link "Commit", "${githubUrl}/pull/${prNumber}/commits/${sha}"
                 }
+
+                def runId = System.getenv("RUN_ID")
+                def jobId = System.getenv("JOB_ID")
+                if (runId != null && jobId != null) {
+                    link "GitHub Actions job", "${githubUrl}/actions/runs/${runId}/job/${jobId}?pr=${prNumber}"
+                }
             }
+
         }
 
         capture {
