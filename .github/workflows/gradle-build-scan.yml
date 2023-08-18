@@ -76,7 +76,7 @@ jobs:
             echo "🚚 Copying build scan: ${DOWNLOAD_DIR}${SCAN}/ to $BUILD_SCAN_DIR ..."
             cp -r ${DOWNLOAD_DIR}${SCAN}/* $BUILD_SCAN_DIR
 
-            JOB_NAME=$(echo ${SCAN} | sed 's/build-scan-\(.*\)/\1/')
+            JOB_NAME=$(echo ${SCAN} | sed 's/.*build-scan-\(.*\)/\1/')
             echo "📤 Uploading build scan for job ${JOB_NAME} ..."
             ./gradlew --no-daemon --stacktrace clean buildScanPublishPrevious
             echo "✅ Published build scan: ${JOB_NAME}"
