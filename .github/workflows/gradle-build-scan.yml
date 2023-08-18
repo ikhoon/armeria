@@ -55,7 +55,7 @@ jobs:
             echo "❔️No pull request number found."
           else
             echo "✅ Pull request number: ${PR_NUMBER}"
-            echo "PR_NUMBER=${PR_NUMBER}" >> "GITHUB_ENV"
+            echo "PR_NUMBER=${PR_NUMBER}" >> "GITHUB_OUTPUT"
           fi
         shell: bash
 
@@ -92,8 +92,9 @@ jobs:
 
       - id: create-or-update-comment
         name: Create or update comment
-        if: env.PR_NUMBER != ''
+        if: steps.get-pr-number.PR_NUMBER
         working-directory: .github/actions
         run: npm run comment-build-scan
         env:
           BUILD_SCANS: ${{ steps.upload-build-scans.outputs.BUILD_SCANS }}
+          PR_NUMBER: ${{ steps.get-pr-number.PR_NUMBER }}
