@@ -92,6 +92,7 @@ jobs:
 
       - id: create-or-update-comment
         name: Create or update comment
+        if: steps.get-pr-number.outputs.PR_NUMBER
         working-directory: .github/actions
         run: |
           npm ci
@@ -99,4 +100,4 @@ jobs:
         shell: bash
         env:
           BUILD_SCANS: ${{ steps.upload-build-scans.outputs.BUILD_SCANS }}
-          PR_NUMBER: ${{ steps.get-pr-number.PR_NUMBER }}
+          PR_NUMBER: ${{ steps.get-pr-number.outputs.PR_NUMBER }}
