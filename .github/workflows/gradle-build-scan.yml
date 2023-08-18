@@ -42,11 +42,6 @@ jobs:
           check_artifacts: true
           search_artifacts: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
       - id: get-pr-number
         name: Get PR number
         run: |
@@ -90,10 +85,18 @@ jobs:
           echo "BUILD_SCANS=${BUILD_SCANS}" >> "$GITHUB_OUTPUT"
         shell: bash
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
       - id: create-or-update-comment
         name: Create or update comment
         working-directory: .github/actions
-        run: npm run comment-build-scan
+        run: |
+          npm ci
+          npm run comment-build-scan
+        shell: bash
         env:
           BUILD_SCANS: ${{ steps.upload-build-scans.outputs.BUILD_SCANS }}
           PR_NUMBER: ${{ steps.get-pr-number.PR_NUMBER }}
