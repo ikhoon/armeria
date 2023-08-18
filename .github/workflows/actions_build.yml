@@ -126,7 +126,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: build-scan-${{ env.JOB_NAME }}
+          name: ${{ github.event.pull_request.number }}-build-scan-${{ env.JOB_NAME }}
           path: ~/.gradle/build-scan-data
 
       - if: ${{ matrix.snapshot && github.ref_name == 'main' }}
