@@ -25,31 +25,31 @@ env:
 
 jobs:
   build:
-    if: github.repository == 'line/armeria'
+    # if: github.repository == 'line/armeria'
     runs-on: ${{ matrix.on }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        on: [ self-hosted, macos-12, windows-latest ]
+        on: [ ubuntu-latest, macos-12, windows-latest ]
         java: [ 19 ]
         include:
           - java: 8
-            on: self-hosted
+            on: ubuntu-latest
           - java: 11
-            on: self-hosted
+            on: ubuntu-latest
           - java: 17
-            on: self-hosted
+            on: ubuntu-latest
             leak: true
           - java: 17
-            on: self-hosted
+            on: ubuntu-latest
             min-java: 11
           - java: 17
-            on: self-hosted
+            on: ubuntu-latest
             min-java: 17
             coverage: true
           - java: 19
-            on: self-hosted
+            on: ubuntu-latest
             snapshot: true
             # blockhound makes the build run about 10 minutes slower
             blockhound: true
@@ -88,7 +88,7 @@ jobs:
       - name: Build with Gradle (Shading only)
         run: |
           ./gradlew --no-daemon --stacktrace shadedJar shadedTestJar trimShadedJar \
-          ${{ (matrix.on == 'self-hosted') && '--max-workers=8' || '--max-workers=2' }} --parallel \
+          ${{ (matrix.on == 'ubuntu-latest') && '--max-workers=8' || '--max-workers=2' }} --parallel \
           ${{ matrix.coverage && '-Pcoverage' || '' }} \
           -PnoLint \
           -PbuildJdkVersion=${{ env.BUILD_JDK_VERSION }} \
@@ -107,7 +107,7 @@ jobs:
       - name: Build with Gradle
         run: |
           ./gradlew --no-daemon --stacktrace build \
-          ${{ (matrix.on == 'self-hosted') && '--max-workers=8' || '--max-workers=2' }} --parallel \
+          ${{ (matrix.on == 'ubuntu-latest') && '--max-workers=8' || '--max-workers=2' }} --parallel \
           ${{ matrix.coverage && '-Pcoverage' || '' }} \
           ${{ matrix.leak && '-Pleak' || '' }} \
           ${{ matrix.blockhound && '-Pblockhound' || '' }} \
@@ -208,8 +208,8 @@ jobs:
           retention-days: 3
 
   lint:
-    if: github.repository == 'line/armeria'
-    runs-on: self-hosted
+    # if: github.repository == 'line/armeria'
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
@@ -229,9 +229,9 @@ jobs:
           ./gradlew --no-daemon --stacktrace --max-workers=8 --parallel lint
 
   site:
-    if: github.repository == 'line/armeria'
+    # if: github.repository == 'line/armeria'
     # ubuntu-latest is preferred for site job.
-    # node_modules need complicated dependencies that are difficult to install on self-hosted runners.
+    # node_modules need complicated dependencies that are difficult to install on ubuntu-latest runners.
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -258,8 +258,8 @@ jobs:
         shell: bash
 
   flaky-tests:
-    if: github.repository == 'line/armeria'
-    runs-on: self-hosted
+    # if: github.repository == 'line/armeria'
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
