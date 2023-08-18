@@ -24,34 +24,34 @@ env:
 
 jobs:
   build:
-    if: github.repository == 'line/armeria'
+#    if: github.repository == 'line/armeria'
     runs-on: ${{ matrix.on }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        on: [ self-hosted, macos-12, windows-latest ]
+        on: [ ubuntu-latest ] # , macos-12, windows-latest ]
         java: [ 19 ]
         include:
           - java: 8
-            on: self-hosted
+            on: ubuntu-latest
           - java: 11
-            on: self-hosted
-          - java: 17
-            on: self-hosted
-            leak: true
-          - java: 17
-            on: self-hosted
-            min-java: 11
-          - java: 17
-            on: self-hosted
-            min-java: 17
-            coverage: true
-          - java: 19
-            on: self-hosted
-            snapshot: true
-            # blockhound makes the build run about 10 minutes slower
-            blockhound: true
+            on: ubuntu-latest
+#          - java: 17
+#            on: ubuntu-latest
+#            leak: true
+#          - java: 17
+#            on: ubuntu-latest
+#            min-java: 11
+#          - java: 17
+#            on: ubuntu-latest
+#            min-java: 17
+#            coverage: true
+#          - java: 19
+#            on: ubuntu-latest
+#            snapshot: true
+#            # blockhound makes the build run about 10 minutes slower
+#            blockhound: true
 
     name: build-${{ matrix.on }}-jdk-${{ matrix.java }}${{ matrix.min-java && format('-min-java-{0}', matrix.min-java) || '' }}${{ matrix.leak && '-leak' || ''}}${{ matrix.coverage && '-coverage' || ''}}${{ matrix.snapshot && '-snapshot' || ''}}${{ matrix.blockhound && '-blockhound' || ''}}
 
@@ -84,17 +84,17 @@ jobs:
 
       # Build the shaded JARs first so that shading process doesn't incur memory pressure
       # on other Gradle tasks such as tests.
-      - name: Build with Gradle (Shading only)
-        run: |
-          ./gradlew --no-daemon --stacktrace shadedJar shadedTestJar trimShadedJar \
-          ${{ (matrix.on == 'self-hosted') && '--max-workers=8' || '--max-workers=2' }} --parallel \
-          ${{ matrix.coverage && '-Pcoverage' || '' }} \
-          -PnoLint \
-          -PbuildJdkVersion=${{ env.BUILD_JDK_VERSION }} \
-          -PtestJavaVersion=${{ matrix.java }} \
-          ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
-          -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
-        shell: bash
+#      - name: Build with Gradle (Shading only)
+#        run: |
+#          ./gradlew --no-daemon --stacktrace shadedJar shadedTestJar trimShadedJar \
+#          ${{ (matrix.on == 'ubuntu-latest') && '--max-workers=8' || '--max-workers=2' }} --parallel \
+#          ${{ matrix.coverage && '-Pcoverage' || '' }} \
+#          -PnoLint \
+#          -PbuildJdkVersion=${{ env.BUILD_JDK_VERSION }} \
+#          -PtestJavaVersion=${{ matrix.java }} \
+#          ${{ matrix.min-java && format('-PminimumJavaVersion={0}', matrix.min-java) || '' }} \
+#          -Porg.gradle.java.installations.paths=${{ steps.setup-build-jdk.outputs.path }},${{ steps.setup-jdk.outputs.path }}
+#        shell: bash
 
       - name: Get job ID
         id: get-job-id
@@ -105,8 +105,8 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          ./gradlew --no-daemon --stacktrace build \
-          ${{ (matrix.on == 'self-hosted') && '--max-workers=8' || '--max-workers=2' }} --parallel \
+          ./gradlew --no-daemon --stacktrace tasks \
+          ${{ (matrix.on == 'ubuntu-latest') && '--max-workers=8' || '--max-workers=2' }} --parallel \
           ${{ matrix.coverage && '-Pcoverage' || '' }} \
           ${{ matrix.leak && '-Pleak' || '' }} \
           ${{ matrix.blockhound && '-Pblockhound' || '' }} \
@@ -209,7 +209,7 @@ jobs:
 
   lint:
     if: github.repository == 'line/armeria'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
@@ -231,7 +231,7 @@ jobs:
   site:
     if: github.repository == 'line/armeria'
     # ubuntu-latest is preferred for site job.
-    # node_modules need complicated dependencies that are difficult to install on self-hosted runners.
+    # node_modules need complicated dependencies that are difficult to install on ubuntu-latest runners.
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -259,7 +259,7 @@ jobs:
 
   flaky-tests:
     if: github.repository == 'line/armeria'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
