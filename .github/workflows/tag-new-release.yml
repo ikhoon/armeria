@@ -15,10 +15,10 @@ env:
   LC_ALL: "en_US.UTF-8"
 
 jobs:
-  release:
+  tag-new-version:
     # TODO(ikhoon): Revert
     if: github.repository == 'ikhoon/armeria'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Validate inputs
