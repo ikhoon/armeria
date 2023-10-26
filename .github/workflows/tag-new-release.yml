@@ -39,8 +39,6 @@ jobs:
         # TODO(ikhoon): Revert
         run: |
           git remote set-url origin https://github.com/ikhoon/armeria.git
-          git config --global user.email "dl_armeria@linecorp.com"
-          git config --global user.name "Meri Kim"
         shell: bash
 
       - name: Import GPG key
