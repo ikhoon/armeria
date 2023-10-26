@@ -1,9 +1,10 @@
 name: Publish final artifacts to Maven Central repository
 
 on:
-  push:
-    tags:
-      - armeria-*
+  workflow_run:
+    workflows: ["Release a new Armeria version"]
+    types:
+      - completed
 
 env:
   LC_ALL: "en_US.UTF-8"
