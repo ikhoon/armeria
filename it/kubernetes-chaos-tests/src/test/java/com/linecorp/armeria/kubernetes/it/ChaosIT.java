@@ -59,10 +59,12 @@ import io.fabric8.kubernetes.client.dsl.PodResource;
 
 @KubernetesTest
 @LoadKubernetesManifests({ "checker-infra.yaml", "control-infra.yaml" })
+@EnableIfMinikubeIsRunning
 class ChaosIT {
 
   // Forked from https://github.com/fabric8io/kubernetes-client/blob/56a6c2c4f336cc6f64c19029a55c2d3d0289344f/chaos-tests/src/test/java/ChaosIT.java#L42-L42
   // Keep the original code as much as possible to make it easier to merge the upstream changes.
+
   private static final Logger logger = LoggerFactory.getLogger(ChaosIT.class);
 
   private static final String GROUP = "fabric8-chaos-tests";
