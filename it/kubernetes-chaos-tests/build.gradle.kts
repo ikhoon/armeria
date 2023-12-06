@@ -1,5 +1,8 @@
 dependencies {
     implementation(project(":kubernetes"))
     implementation(libs.picocli)
-    testImplementation("io.fabric8:kubernetes-junit-jupiter:6.9.0")
+    testImplementation(libs.kubernetes.junit.jupiter) {
+        exclude(group = "io.fabric8", module="kubernetes-httpclient-okhttp")
+    }
+    testImplementation(libs.logback13)
 }

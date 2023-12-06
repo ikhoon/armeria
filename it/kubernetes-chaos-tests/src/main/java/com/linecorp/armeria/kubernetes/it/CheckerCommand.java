@@ -37,6 +37,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
@@ -47,6 +50,8 @@ import picocli.CommandLine.Command;
 
 @Command(name = "checker", mixinStandardHelpOptions = true)
 public class CheckerCommand implements Runnable {
+
+  private static final Logger logger = LoggerFactory.getLogger(CheckerCommand.class);
 
   // Forked from https://github.com/fabric8io/kubernetes-client/blob/e4947f762697be50dee06944795b58386216e8b8/chaos-tests/src/main/java/io/fabric8/it/CheckerCommand.java
 
@@ -74,7 +79,7 @@ public class CheckerCommand implements Runnable {
 
   @Override
   public void run() {
-    System.out.printf("Running Checker App%n - num: %s%n - namespace: %s%n", num, namespace);
+    logger.info("Running Checker App - num: {}, namespace: {}", num, namespace);
     KubernetesClient client = new KubernetesClientBuilder().build();
 
     CountDownLatch latch = new CountDownLatch(1);
@@ -83,10 +88,10 @@ public class CheckerCommand implements Runnable {
     ResourceEventHandler<ConfigMap> handler = new ResourceEventHandler<ConfigMap>() {
       @Override
       public void onAdd(ConfigMap configMap) {
-        System.out.println("Ready to start");
+        logger.info("Ready to start");
         int initialCount = extractValue(configMap);
         if (initialCount == 0) {
-          System.out.println("Counter is 0");
+          logger.info("Counter is 0");
           counter.set(0);
         } else {
           throw new RuntimeException("Counter is NOT ZERO at the start! Found value: " + initialCount);
@@ -97,10 +102,10 @@ public class CheckerCommand implements Runnable {
       public void onUpdate(ConfigMap oldConfigMap, ConfigMap newConfigMap) {
         int currentValue = extractValue(newConfigMap);
         if (counter.compareAndSet(currentValue - 1, currentValue)) {
-          System.out.println("Update received, and it's in the correct order, counter: " + currentValue);
+          logger.info("Update received, and it's in the correct order, counter: " + currentValue);
         } else {
           if (currentValue > counter.get()) {
-            System.out.println("Update received, NOT in the correct order but compatible: " + currentValue);
+            logger.info("Update received, NOT in the correct order but compatible: " + currentValue);
             counter.set(currentValue);
           } else {
             throw new RuntimeException("Update received in an incorrect order: " + currentValue);
@@ -108,7 +113,7 @@ public class CheckerCommand implements Runnable {
         }
 
         if (currentValue == num) {
-          System.out.println("Last update received!");
+          logger.info("Last update received!");
         } else if (currentValue > num) {
           throw new RuntimeException("Current value is > than the expected value, " + currentValue);
         }
@@ -117,7 +122,7 @@ public class CheckerCommand implements Runnable {
       @Override
       public void onDelete(ConfigMap configMap, boolean deletedFinalStateUnknown) {
         if (counter.compareAndSet(num, 0)) {
-          System.out.println("Experiment should successfully end");
+          logger.info("Experiment should successfully end");
           latch.countDown();
         } else {
           throw new RuntimeException("Expected " + num + " but reached " + counter.get());
@@ -139,7 +144,7 @@ public class CheckerCommand implements Runnable {
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
-    System.out.println("Terminating successfully!");
+    logger.info("Terminating successfully!");
     System.exit(0);
   }
 

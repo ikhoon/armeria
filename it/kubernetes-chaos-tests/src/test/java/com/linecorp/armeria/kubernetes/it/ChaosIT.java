@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,10 +58,10 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 
 @KubernetesTest
-@LoadKubernetesManifests(value = { "checker-infra.yaml", "control-infra.yaml" })
+@LoadKubernetesManifests({ "checker-infra.yaml", "control-infra.yaml" })
 class ChaosIT {
 
-  private static final Logger logger = LoggerFactory.getLogger(ChaosIT.class.getName());
+  private static final Logger logger = LoggerFactory.getLogger(ChaosIT.class);
 
   private static final String GROUP = "fabric8-chaos-tests";
   private static final String CHECKER = "checker";
@@ -101,6 +102,8 @@ class ChaosIT {
     client.pods().withLabel("group", GROUP).withGracePeriod(0L).delete();
   }
 
+  // The test is expected to run for 20 minutes, so we set the timeout to 30 minutes.
+  @Timeout(value = 30, unit = TimeUnit.MINUTES)
   @Test
   void test() throws IOException {
     logger.warn("Running test with chaos settings from: " + chaosTest);
@@ -119,7 +122,7 @@ class ChaosIT {
       return true;
     });
 
-    try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(chaosTest)) {
+    try (InputStream is = this.getClass().getResourceAsStream(chaosTest)) {
       client.load(is).inNamespace(client.getNamespace()).serverSideApply();
     }
 

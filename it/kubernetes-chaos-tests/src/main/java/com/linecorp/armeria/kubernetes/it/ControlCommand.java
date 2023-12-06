@@ -34,6 +34,9 @@ package com.linecorp.armeria.kubernetes.it;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -43,6 +46,8 @@ import picocli.CommandLine.Command;
 
 @Command(name = "control", mixinStandardHelpOptions = true)
 public class ControlCommand implements Runnable {
+
+  private static final Logger logger = LoggerFactory.getLogger(ControlCommand.class);
 
   // Forked from https://github.com/fabric8io/kubernetes-client/blob/e4947f762697be50dee06944795b58386216e8b8/chaos-tests/src/main/java/io/fabric8/it/ControlCommand.java
 
@@ -74,7 +79,7 @@ public class ControlCommand implements Runnable {
 
   @Override
   public void run() {
-    System.out.printf("Running Control App%n - num: %s%n - namespace: %s%n", num, namespace);
+    logger.info("Running Control App - num: {}, namespace: {}", num, namespace);
     KubernetesClient client = new KubernetesClientBuilder().build();
 
     Map<String, String> labels = new HashMap<>();
@@ -91,7 +96,7 @@ public class ControlCommand implements Runnable {
         .build();
 
     if (client.resource(defaultConfigMap).inNamespace(namespace).get() != null) {
-      System.out.println("ConfigMap detected removing it before starting");
+      logger.debug("ConfigMap detected removing it before starting");
       client.resource(defaultConfigMap).inNamespace(namespace).delete();
     }
     client.resource(defaultConfigMap).inNamespace(namespace).create();
@@ -109,10 +114,10 @@ public class ControlCommand implements Runnable {
         throw new RuntimeException("Cannot find the configMap!");
       } else {
         int counter = extractValue(currentConfigMap);
-        System.out.println("going to increment the value, current: " + counter);
+        logger.debug("going to increment the value, current: " + counter);
 
         if (counter == num) {
-          System.out.println("I'm done here!");
+          logger.debug("I'm done here!");
           break;
         } else if (counter > num) {
           throw new RuntimeException("Something went wrong!");
@@ -129,7 +134,7 @@ public class ControlCommand implements Runnable {
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
-    System.out.println("Finished! deleting the ConfigMap");
+    logger.info("Finished! deleting the ConfigMap");
     client.resource(defaultConfigMap).inNamespace(namespace).delete();
   }
 
