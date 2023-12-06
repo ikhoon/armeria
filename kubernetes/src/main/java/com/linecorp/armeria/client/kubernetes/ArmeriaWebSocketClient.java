@@ -18,6 +18,11 @@
 package com.linecorp.armeria.client.kubernetes;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import com.google.common.base.Strings;
@@ -104,6 +109,17 @@ final class ArmeriaWebSocketClient {
 
     private static WebSocketUpgradeResponse newUpgradeResponse(StandardHttpRequest request,
                                                                ResponseHeaders upgradeHeaders) {
-        return new WebSocketUpgradeResponse(request, upgradeHeaders.status().code(), upgradeHeaders.toMap());
+        return new WebSocketUpgradeResponse(request, upgradeHeaders.status().code(), toMap(upgradeHeaders));
+    }
+
+    // TODO(ikhoon): Consider adding `HttpHeaders.toMap()`.
+    private static Map<String, List<String>> toMap(HttpHeaders headers) {
+        final Map<String, List<String>> map = new HashMap<>();
+        headers.forEach((name, value) -> {
+            final String nameStr = name.toString();
+            final List<String> values = map.computeIfAbsent(nameStr, k -> new ArrayList<>());
+            values.add(value);
+        });
+        return Collections.unmodifiableMap(map);
     }
 }
