@@ -45,6 +45,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,7 @@ import io.fabric8.kubernetes.client.dsl.PodResource;
 
 @KubernetesTest
 @LoadKubernetesManifests({ "checker-infra.yaml", "control-infra.yaml" })
-@EnableIfMinikubeIsRunning
+@EnabledIf("com.linecorp.armeria.kubernetes.it.ChaosMeshAvailableCondition#isRunning")
 class ChaosIT {
 
   // Forked from https://github.com/fabric8io/kubernetes-client/blob/56a6c2c4f336cc6f64c19029a55c2d3d0289344f/chaos-tests/src/test/java/ChaosIT.java#L42-L42
