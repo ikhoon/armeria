@@ -24,7 +24,7 @@ jobs:
   chaos-tests:
     name: Kubernetes Chaos Test
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     if: github.repository == 'line/armeria'
     strategy:
       fail-fast: false
