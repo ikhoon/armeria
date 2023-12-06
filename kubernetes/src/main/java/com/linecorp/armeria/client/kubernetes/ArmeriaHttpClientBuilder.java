@@ -57,7 +57,8 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
             factoryBuilderHolder.get().connectTimeout(connectTimeout);
         }
 
-        // Kubernetes mock server does not support HTTP/2.
+        // Use HTTP/1 Upgrade requests for test convenience. Kubernetes mock server does not support HTTP/2.
+        // TODO(ikhoon): Provide a way to configure this.
         factoryBuilderHolder.get().useHttp2Preface(false);
 
         if (sslContext != null) {
@@ -66,6 +67,7 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
             final TrustManager trustManager =
                     (trustManagers != null && trustManagers.length > 0) ? trustManagers[0] : null;
 
+            // TODO(ikhoon): Use TlsProvider when https://github.com/line/armeria/pull/5228 is merged.
             factoryBuilderHolder.get().tlsCustomizer(sslContextBuilder -> {
                 if (keyManager != null) {
                     sslContextBuilder.keyManager(keyManager);
