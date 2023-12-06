@@ -50,6 +50,7 @@ public class ControlCommand implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(ControlCommand.class);
 
   // Forked from https://github.com/fabric8io/kubernetes-client/blob/e4947f762697be50dee06944795b58386216e8b8/chaos-tests/src/main/java/io/fabric8/it/ControlCommand.java
+  // Keep the original code as much as possible to make it easier to merge the upstream changes.
 
   @CommandLine.Option(names = {
       "--num" }, paramLabel = "<num>", defaultValue = "10", description = "The number to be reached to quit successfully")

@@ -110,9 +110,6 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
             clientBuilder.followRedirects();
         }
 
-        // TODO(ikhoon): Remove this before pushing to GitHub.
-//        clientBuilder.decorator(LoggingClient.newDecorator());
-
         final ClientFactory clientFactory = factoryBuilderHolder.maybeBuild();
         clientBuilder.factory(clientFactory);
         final WebClient webClient = clientBuilder.build();
