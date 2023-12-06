@@ -1,4 +1,4 @@
-name: Kubernetes E2E Chaos Tests
+name: E2E Tests
 
 # Forked from https://github.com/fabric8io/kubernetes-client/blob/56a6c2c4f336cc6f64c19029a55c2d3d0289344f/.github/workflows/e2e-chaos-tests.yml
 
@@ -28,8 +28,6 @@ jobs:
     if: github.repository == 'line/armeria'
     strategy:
       fail-fast: false
-      matrix:
-        chaos-test: ["network-delay.yaml", "network-loss.yaml", "network-duplicate.yaml"]
     steps:
       - uses: actions/checkout@v4
 
@@ -60,10 +58,23 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - name: Run Chaos Tests
+      - name: Run Chaos Tests - network-delay.yaml
         env:
-          CHAOS_TEST: ${{ matrix.chaos-test }}
+          CHAOS_TEST: network-delay.yaml
         run: |
-          - name: Build with Gradle
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test
+        shell: bash
+
+      - name: Run Chaos Tests - network-loss.yaml
+        env:
+          CHAOS_TEST: network-loss.yaml
+        run: |
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test
+        shell: bash
+
+      - name: Run Chaos Tests - network-duplication.yaml
+        env:
+          CHAOS_TEST: network-duplication.yaml
+        run: |
           ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test
         shell: bash
