@@ -43,14 +43,14 @@ jobs:
       - name: Setup Minikube-Kubernetes
         uses: manusa/actions-setup-minikube@v2.9.0
         with:
-          minikube version: ${{ MINIKUBE_VERSION }}
-          kubernetes version: ${{ KUBERNETES_VERSION }}
+          minikube version: ${{ env.MINIKUBE_VERSION }}
+          kubernetes version: ${{ env.KUBERNETES_VERSION }}
           github token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Kubectl # Chaos-Mesh setup requires a functional kubectl version for all cluster versiones
         uses: azure/setup-kubectl@v3
         with:
-          version: ${{ KUBERNETES_VERSION }}
+          version: ${{ env.KUBERNETES_VERSION }}
 
       - name: Install Chaos Mesh
         run: |
