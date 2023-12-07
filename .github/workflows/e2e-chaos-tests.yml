@@ -21,7 +21,7 @@ env:
 jobs:
   chaos-tests:
     name: Kubernetes Chaos Test
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     if: github.repository == 'line/armeria'
     steps:
