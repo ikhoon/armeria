@@ -27,6 +27,7 @@ import com.linecorp.armeria.client.ClientFactory;
 import com.linecorp.armeria.client.ClientFactoryBuilder;
 import com.linecorp.armeria.client.WebClient;
 import com.linecorp.armeria.client.WebClientBuilder;
+import com.linecorp.armeria.client.logging.LoggingClient;
 import com.linecorp.armeria.client.proxy.ProxyConfig;
 import com.linecorp.armeria.common.HttpHeaderNames;
 import com.linecorp.armeria.common.HttpHeaders;
@@ -61,6 +62,9 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
         // TODO(ikhoon): Provide a way to configure this.
         factoryBuilderHolder.get().useHttp2Preface(false);
 
+        if (isPreferHttp11()) {
+            factoryBuilderHolder.get().preferHttp1(true);
+        }
         if (sslContext != null) {
             final KeyManager keyManager =
                     (keyManagers != null && keyManagers.length > 0) ? keyManagers[0] : null;
@@ -111,6 +115,7 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
         if (followRedirects) {
             clientBuilder.followRedirects();
         }
+        clientBuilder.decorator(LoggingClient.newDecorator());
 
         final ClientFactory clientFactory = factoryBuilderHolder.maybeBuild();
         clientBuilder.factory(clientFactory);

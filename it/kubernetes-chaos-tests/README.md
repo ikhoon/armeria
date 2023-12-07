@@ -16,7 +16,7 @@ minikube start --driver=docker --memory 8192 --cpus 3
 Install ChaosMesh on minikube:
 
 ```bash
-curl -sSL https://mirrors.chaos-mesh.org/v2.6.2/install.sh | bash
+curl -sSL https://mirrors.chaos-mesh.org/v2.6.0/install.sh | bash
 ```
 
 Wait for the pods to be all ready:

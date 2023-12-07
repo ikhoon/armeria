@@ -75,6 +75,7 @@ allprojects {
         // Drop heap dump and exit on OOME.
         jvmArgs '-XX:+ExitOnOutOfMemoryError'
         jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
+//        jvmArgs "-Xdebug", "-agentlib:jdwp=transport=dt_socket,address=*:8787,server=y,suspend=y"
 
         // `-Djava.security.manager` was added in Java 17 and the default value was changed to
         // `disallow` in Java 18.
