@@ -17,8 +17,6 @@ concurrency:
 
 env:
   CHAOS_MESH_VERSION: 2.6.2
-  KUBERNETES_VERSION: v1.25.0
-  MINIKUBE_VERSION: v1.32.0
 
 jobs:
   chaos-tests:
@@ -39,11 +37,6 @@ jobs:
       - name: Setup Minikube-Kubernetes
         id: minikube
         uses: medyagh/setup-minikube@latest
-
-      - name: Setup Kubectl # Chaos-Mesh setup requires a functional kubectl version for all cluster versiones
-        uses: azure/setup-kubectl@v3
-        with:
-          version: ${{ env.KUBERNETES_VERSION }}
 
       - name: Install Chaos Mesh
         run: |
