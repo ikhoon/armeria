@@ -27,6 +27,7 @@ import com.linecorp.armeria.client.ClientFactory;
 import com.linecorp.armeria.client.ClientFactoryBuilder;
 import com.linecorp.armeria.client.WebClient;
 import com.linecorp.armeria.client.WebClientBuilder;
+import com.linecorp.armeria.client.logging.ContentPreviewingClient;
 import com.linecorp.armeria.client.logging.LoggingClient;
 import com.linecorp.armeria.client.proxy.ProxyConfig;
 import com.linecorp.armeria.common.HttpHeaderNames;
@@ -116,6 +117,7 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
             clientBuilder.followRedirects();
         }
         clientBuilder.decorator(LoggingClient.newDecorator());
+        clientBuilder.decorator(ContentPreviewingClient.newDecorator(Integer.MAX_VALUE));
 
         final ClientFactory clientFactory = factoryBuilderHolder.maybeBuild();
         clientBuilder.factory(clientFactory);
