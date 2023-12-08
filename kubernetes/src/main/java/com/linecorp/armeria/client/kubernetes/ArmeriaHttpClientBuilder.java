@@ -58,18 +58,37 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
         }
 
         final WebClientBuilder clientBuilder = WebClient.builder();
+        clientBuilder.factory(clientFactory(false));
+
+        if (LoggerFactory.getLogger(ArmeriaHttpClient.class).isTraceEnabled()) {
+            clientBuilder.decorator(LoggingClient.builder()
+                                                 .requestLogLevel(LogLevel.TRACE)
+                                                 .logger(ArmeriaHttpClient.class.getName())
+                                                 .successfulResponseLogLevel(LogLevel.TRACE)
+                                                 .newDecorator());
+            // 16 KiB should be enough for most of the cases.
+            clientBuilder.decorator(ContentPreviewingClient.newDecorator(16 * 1024));
+        }
+
+        if (followRedirects) {
+            clientBuilder.followRedirects();
+        }
+
+        final WebClient webClient = clientBuilder.build();
+        return client = new ArmeriaHttpClient(this, webClient);
+    }
+
+    ClientFactory clientFactory(boolean webSocket) {
         final ClientFactoryBuilderHolder factoryBuilderHolder = new ClientFactoryBuilderHolder();
         if (connectTimeout != null && !connectTimeout.isZero() && !connectTimeout.isNegative()) {
             factoryBuilderHolder.get().connectTimeout(connectTimeout);
         }
 
-        // Use HTTP/1 Upgrade requests for test convenience. Kubernetes mock server does not support HTTP/2.
-        // TODO(ikhoon): Provide a way to configure this.
-        factoryBuilderHolder.get().useHttp2Preface(false);
-
-        if (isPreferHttp11()) {
+        // Kubernetes WebSocket does not support HTTP/2.
+        if (isPreferHttp11() || webSocket) {
             factoryBuilderHolder.get().preferHttp1(true);
         }
+
         if (sslContext != null) {
             final KeyManager keyManager =
                     (keyManagers != null && keyManagers.length > 0) ? keyManagers[0] : null;
@@ -117,24 +136,7 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
         }
         factoryBuilderHolder.get().proxyConfig(proxyConfig);
 
-        if (followRedirects) {
-            clientBuilder.followRedirects();
-        }
-
-        if (LoggerFactory.getLogger(ArmeriaHttpClient.class).isTraceEnabled()) {
-            clientBuilder.decorator(LoggingClient.builder()
-                                            .requestLogLevel(LogLevel.TRACE)
-                                            .logger(ArmeriaHttpClient.class.getName())
-                                            .successfulResponseLogLevel(LogLevel.TRACE)
-                                            .newDecorator());
-            // 16 KiB should be enough for most of the cases.
-            clientBuilder.decorator(ContentPreviewingClient.newDecorator(16 * 1024));
-        }
-
-        final ClientFactory clientFactory = factoryBuilderHolder.maybeBuild();
-        clientBuilder.factory(clientFactory);
-        final WebClient webClient = clientBuilder.build();
-        return client = new ArmeriaHttpClient(this, webClient);
+        return factoryBuilderHolder.maybeBuild();
     }
 
     @Override

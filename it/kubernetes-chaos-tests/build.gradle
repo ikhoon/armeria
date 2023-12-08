@@ -7,7 +7,7 @@ dependencies {
     implementation(project(':kubernetes'))
     implementation(libs.picocli)
     testImplementation(libs.kubernetes.junit.jupiter)
-    testImplementation(libs.logback13)
+    implementation(libs.logback13)
 }
 
 task copyDependencies(type: Copy) {
@@ -21,17 +21,19 @@ kubernetes {
         image {
             name = 'chaos-test-checker:latest'
             build {
-                from = "eclipse-temurin:17-jdk"
+                from = 'quay.io/jkube/jkube-java:0.0.19'
                 assembly {
+                    targetDir = '/deployments'
                     layers = [{
                         fileSets = [{
                             directory = file("${project.buildDir}/dependencies")
-                            outputDirectory = "."
+                            outputDirectory = '.'
                         }]
                     }]
                 }
-                entryPoint {
-                    exec = ['java','-cp','maven/*', "com.linecorp.armeria.kubernetes.it.CheckerCommand"]
+                env {
+                    JAVA_LIB_DIR = '/deployments/*'
+                    JAVA_MAIN_CLASS = 'com.linecorp.armeria.kubernetes.it.CheckerCommand'
                 }
             }
         }
@@ -39,17 +41,19 @@ kubernetes {
         image {
             name = 'chaos-test-control:latest'
             build {
-                from = "eclipse-temurin:17-jdk"
+                from = 'quay.io/jkube/jkube-java:0.0.19'
                 assembly {
+                    targetDir = '/deployments'
                     layers = [{
                         fileSets = [{
                             directory = file("${project.buildDir}/dependencies")
-                            outputDirectory = "."
+                            outputDirectory = '.'
                         }]
                     }]
                 }
-                entryPoint {
-                    exec = ['java','-cp','maven/*', "com.linecorp.armeria.kubernetes.it.ControlCommand"]
+                env {
+                    JAVA_LIB_DIR = '/deployments/*'
+                    JAVA_MAIN_CLASS = 'com.linecorp.armeria.kubernetes.it.ControlCommand'
                 }
             }
         }
@@ -57,4 +61,4 @@ kubernetes {
 }
 
 tasks.k8sBuild.dependsOn(tasks.copyDependencies)
-tasks.test.dependsOn(tasks.k8sBuild)
+//tasks.test.dependsOn(tasks.k8sBuild)
