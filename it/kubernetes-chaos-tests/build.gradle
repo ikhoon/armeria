@@ -61,4 +61,4 @@ kubernetes {
 }
 
 tasks.k8sBuild.dependsOn(tasks.copyDependencies)
-//tasks.test.dependsOn(tasks.k8sBuild)
+tasks.test.dependsOn(tasks.k8sBuild)
