@@ -16,44 +16,30 @@ task copyDependencies(type: Copy) {
     into "${project.buildDir}/dependencies"
 }
 
+def imageNameAndMainClasses= [
+    'chaos-test-checker:latest': 'com.linecorp.armeria.kubernetes.it.CheckerCommand',
+    'chaos-test-control:latest': 'com.linecorp.armeria.kubernetes.it.ControlCommand'
+]
 kubernetes {
     images {
-        image {
-            name = 'chaos-test-checker:latest'
-            build {
-                from = 'quay.io/jkube/jkube-java:0.0.19'
-                assembly {
-                    targetDir = '/deployments'
-                    layers = [{
-                        fileSets = [{
-                            directory = file("${project.buildDir}/dependencies")
-                            outputDirectory = '.'
+        imageNameAndMainClasses.each { imageName, mainClass ->
+            image {
+                name = imageName
+                build {
+                    from = 'quay.io/jkube/jkube-java:0.0.19'
+                    assembly {
+                        targetDir = '/deployments'
+                        layers = [{
+                            fileSets = [{
+                                directory = file("${project.buildDir}/dependencies")
+                                outputDirectory = '.'
+                            }]
                         }]
-                    }]
-                }
-                env {
-                    JAVA_LIB_DIR = '/deployments/*'
-                    JAVA_MAIN_CLASS = 'com.linecorp.armeria.kubernetes.it.CheckerCommand'
-                }
-            }
-        }
-
-        image {
-            name = 'chaos-test-control:latest'
-            build {
-                from = 'quay.io/jkube/jkube-java:0.0.19'
-                assembly {
-                    targetDir = '/deployments'
-                    layers = [{
-                        fileSets = [{
-                            directory = file("${project.buildDir}/dependencies")
-                            outputDirectory = '.'
-                        }]
-                    }]
-                }
-                env {
-                    JAVA_LIB_DIR = '/deployments/*'
-                    JAVA_MAIN_CLASS = 'com.linecorp.armeria.kubernetes.it.ControlCommand'
+                    }
+                    env {
+                        JAVA_LIB_DIR = '/deployments/*'
+                        JAVA_MAIN_CLASS = mainClass
+                    }
                 }
             }
         }
