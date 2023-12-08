@@ -23,6 +23,8 @@ import java.util.stream.Stream;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
+import org.slf4j.LoggerFactory;
+
 import com.linecorp.armeria.client.ClientFactory;
 import com.linecorp.armeria.client.ClientFactoryBuilder;
 import com.linecorp.armeria.client.WebClient;
@@ -33,6 +35,7 @@ import com.linecorp.armeria.client.proxy.ProxyConfig;
 import com.linecorp.armeria.common.HttpHeaderNames;
 import com.linecorp.armeria.common.HttpHeaders;
 import com.linecorp.armeria.common.annotation.Nullable;
+import com.linecorp.armeria.common.logging.LogLevel;
 
 import io.fabric8.kubernetes.client.http.StandardHttpClientBuilder;
 import io.fabric8.kubernetes.client.http.TlsVersion;
@@ -42,6 +45,7 @@ import io.fabric8.kubernetes.client.http.TlsVersion;
  */
 public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
         ArmeriaHttpClient, ArmeriaHttpClientFactory, ArmeriaHttpClientBuilder> {
+
 
     ArmeriaHttpClientBuilder(ArmeriaHttpClientFactory clientFactory) {
         super(clientFactory);
@@ -116,8 +120,16 @@ public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
         if (followRedirects) {
             clientBuilder.followRedirects();
         }
-        clientBuilder.decorator(LoggingClient.newDecorator());
-        clientBuilder.decorator(ContentPreviewingClient.newDecorator(Integer.MAX_VALUE));
+
+        if (LoggerFactory.getLogger(ArmeriaHttpClient.class).isTraceEnabled()) {
+            clientBuilder.decorator(LoggingClient.builder()
+                                            .requestLogLevel(LogLevel.TRACE)
+                                            .logger(ArmeriaHttpClient.class.getName())
+                                            .successfulResponseLogLevel(LogLevel.TRACE)
+                                            .newDecorator());
+            // 16 KiB should be enough for most of the cases.
+            clientBuilder.decorator(ContentPreviewingClient.newDecorator(16 * 1024));
+        }
 
         final ClientFactory clientFactory = factoryBuilderHolder.maybeBuild();
         clientBuilder.factory(clientFactory);

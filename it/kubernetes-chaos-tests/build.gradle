@@ -1,0 +1,60 @@
+// TODO(ikhoon): Declare the version in dependencies.tom
+plugins {
+    id 'org.eclipse.jkube.kubernetes' version '1.15.0'
+}
+
+dependencies {
+    implementation(project(':kubernetes'))
+    implementation(libs.picocli)
+    testImplementation(libs.kubernetes.junit.jupiter)
+    testImplementation(libs.logback13)
+}
+
+task copyDependencies(type: Copy) {
+    from tasks.jar
+    from configurations.runtimeClasspath
+    into "${project.buildDir}/dependencies"
+}
+
+kubernetes {
+    images {
+        image {
+            name = 'chaos-test-checker:latest'
+            build {
+                from = "eclipse-temurin:17-jdk"
+                assembly {
+                    layers = [{
+                        fileSets = [{
+                            directory = file("${project.buildDir}/dependencies")
+                            outputDirectory = "."
+                        }]
+                    }]
+                }
+                entryPoint {
+                    exec = ['java','-cp','maven/*', "com.linecorp.armeria.kubernetes.it.CheckerCommand"]
+                }
+            }
+        }
+
+        image {
+            name = 'chaos-test-control:latest'
+            build {
+                from = "eclipse-temurin:17-jdk"
+                assembly {
+                    layers = [{
+                        fileSets = [{
+                            directory = file("${project.buildDir}/dependencies")
+                            outputDirectory = "."
+                        }]
+                    }]
+                }
+                entryPoint {
+                    exec = ['java','-cp','maven/*', "com.linecorp.armeria.kubernetes.it.ControlCommand"]
+                }
+            }
+        }
+    }
+}
+
+tasks.k8sBuild.dependsOn(tasks.copyDependencies)
+tasks.test.dependsOn(tasks.k8sBuild)

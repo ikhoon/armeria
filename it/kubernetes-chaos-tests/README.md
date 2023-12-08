@@ -32,6 +32,8 @@ eval $(minikube -p minikube docker-env)
 ./gradlew :it:kubernetes-chaos-tests:test
 ```
 
+Note that the test won't be run if ChaosMesh is not installed locally.
+
 ### Glossary
 
 - checker: run the SharedInformer to get notifications over the shared resource

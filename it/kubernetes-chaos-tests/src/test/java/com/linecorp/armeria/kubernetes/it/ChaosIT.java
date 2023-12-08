@@ -116,13 +116,13 @@ class ChaosIT {
     logger.warn("Using control image: " + controlImage);
 
     final PodResource checkerSelector = run(CHECKER, checkerImage);
-    await().pollInterval(1, TimeUnit.SECONDS).ignoreExceptions().atMost(5, TimeUnit.MINUTES).until(() -> {
+    await().pollInterval(1, TimeUnit.SECONDS).ignoreExceptions().atMost(1, TimeUnit.MINUTES).until(() -> {
       assertEquals("Running", checkerSelector.get().getStatus().getPhase());
       return true;
     });
 
     final PodResource controlSelector = run(CONTROL, controlImage);
-    await().pollInterval(1, TimeUnit.SECONDS).ignoreExceptions().atMost(5, TimeUnit.MINUTES).until(() -> {
+    await().pollInterval(1, TimeUnit.SECONDS).ignoreExceptions().atMost(1, TimeUnit.MINUTES).until(() -> {
       assertTrue(checkerSelector.getLog().contains("Update received, and it's in the correct order, counter: 1"));
       return true;
     });
