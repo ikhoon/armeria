@@ -109,7 +109,9 @@ final class ArmeriaWebSocketClient implements SafeCloseable {
 
     @Override
     public void close() {
-        webSocketClient.options().factory().close();
+        if (webSocketClient != null) {
+            webSocketClient.options().factory().close();
+        }
     }
 
     private static WebSocketUpgradeResponse newUpgradeResponse(StandardHttpRequest request,
@@ -127,5 +129,4 @@ final class ArmeriaWebSocketClient implements SafeCloseable {
         });
         return Collections.unmodifiableMap(map);
     }
-
 }

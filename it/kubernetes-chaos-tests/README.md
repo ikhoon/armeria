@@ -29,7 +29,7 @@ Build the control and checker Docker images in the minikube docker-env and run t
 
 ```bash
 eval $(minikube -p minikube docker-env)
-./gradlew :it:kubernetes-chaos-tests:test
+./gradlew :it:kubernetes-chaos-tests:k8sBuild :it:kubernetes-chaos-tests:test
 ```
 
 Note that the test won't be run if ChaosMesh is not installed locally.

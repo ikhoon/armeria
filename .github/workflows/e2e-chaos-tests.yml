@@ -20,7 +20,7 @@ env:
 
 jobs:
   chaos-tests:
-    name: Kubernetes Chaos Test
+    name: Kubernetes Chaos test
     runs-on: ubuntu-latest
     timeout-minutes: 120
     if: github.repository == 'line/armeria'
@@ -47,23 +47,28 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
+      - name: Build Chaos test images
+        run: |
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:k8sBuild
+        shell: bash
+
       - name: Run Chaos Tests - network-delay.yaml
         env:
           CHAOS_TEST: network-delay.yaml
         run: |
-          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --info
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test
         shell: bash
 
       - name: Run Chaos Tests - network-loss.yaml
         env:
           CHAOS_TEST: network-loss.yaml
         run: |
-          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --info
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --rerun-tasks
         shell: bash
 
       - name: Run Chaos Tests - network-duplication.yaml
         env:
           CHAOS_TEST: network-duplication.yaml
         run: |
-          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --rerun-tasks
         shell: bash

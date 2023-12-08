@@ -46,7 +46,6 @@ import io.fabric8.kubernetes.client.http.TlsVersion;
 public final class ArmeriaHttpClientBuilder extends StandardHttpClientBuilder<
         ArmeriaHttpClient, ArmeriaHttpClientFactory, ArmeriaHttpClientBuilder> {
 
-
     ArmeriaHttpClientBuilder(ArmeriaHttpClientFactory clientFactory) {
         super(clientFactory);
     }
