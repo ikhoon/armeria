@@ -42,6 +42,7 @@ jobs:
         run: |
           curl -sSL https://mirrors.chaos-mesh.org/v${CHAOS_MESH_VERSION}/install.sh | bash
           kubectl wait --for=condition=Ready pods --all-namespaces --all --timeout=600s
+          eval $(minikube -p minikube docker-env)
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
@@ -50,14 +51,14 @@ jobs:
         env:
           CHAOS_TEST: network-delay.yaml
         run: |
-          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --info
         shell: bash
 
       - name: Run Chaos Tests - network-loss.yaml
         env:
           CHAOS_TEST: network-loss.yaml
         run: |
-          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --info
         shell: bash
 
       - name: Run Chaos Tests - network-duplication.yaml
