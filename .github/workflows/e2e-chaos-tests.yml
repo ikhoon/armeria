@@ -43,6 +43,7 @@ jobs:
           curl -sSL https://mirrors.chaos-mesh.org/v${CHAOS_MESH_VERSION}/install.sh | bash
           kubectl wait --for=condition=Ready pods --all-namespaces --all --timeout=600s
           eval $(minikube -p minikube docker-env)
+        shell: bash
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
