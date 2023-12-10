@@ -25,10 +25,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Strings;
 
 import com.linecorp.armeria.client.RequestOptions;
+import com.linecorp.armeria.client.logging.ContentPreviewingClient;
+import com.linecorp.armeria.client.logging.LoggingClient;
 import com.linecorp.armeria.client.websocket.WebSocketClient;
+import com.linecorp.armeria.client.websocket.WebSocketClientBuilder;
 import com.linecorp.armeria.client.websocket.WebSocketClientHandshakeException;
 import com.linecorp.armeria.client.websocket.WebSocketSession;
 import com.linecorp.armeria.common.HttpHeaderNames;
@@ -36,6 +41,7 @@ import com.linecorp.armeria.common.HttpHeaders;
 import com.linecorp.armeria.common.HttpHeadersBuilder;
 import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.common.annotation.Nullable;
+import com.linecorp.armeria.common.logging.LogLevel;
 import com.linecorp.armeria.common.util.Exceptions;
 import com.linecorp.armeria.common.util.SafeCloseable;
 
@@ -57,9 +63,20 @@ final class ArmeriaWebSocketClient implements SafeCloseable {
 
     private WebSocketClient webSocketClient() {
         if (webSocketClient == null) {
-            webSocketClient = WebSocketClient.builder()
-                                             .factory(armeriaHttpClientBuilder.clientFactory(true))
-                                             .build();
+            final WebSocketClientBuilder clientBuilder =
+                    WebSocketClient.builder()
+                                   .factory(armeriaHttpClientBuilder.clientFactory(true));
+
+            if (LoggerFactory.getLogger(ArmeriaWebSocketClient.class).isTraceEnabled()) {
+                clientBuilder.decorator(LoggingClient.builder()
+                                                     .requestLogLevel(LogLevel.TRACE)
+                                                     .logger(ArmeriaWebSocketClient.class.getName())
+                                                     .successfulResponseLogLevel(LogLevel.TRACE)
+                                                     .newDecorator());
+                // 16 KiB should be enough for most of the cases.
+                clientBuilder.decorator(ContentPreviewingClient.newDecorator(1600 * 1024));
+            }
+            webSocketClient = clientBuilder.build();
         }
         return webSocketClient;
     }

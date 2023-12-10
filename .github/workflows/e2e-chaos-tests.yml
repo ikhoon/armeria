@@ -23,7 +23,7 @@ jobs:
     name: Kubernetes Chaos test
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    if: github.repository == 'line/armeria'
+    if: github.repository == 'ikhoon/armeria'
     steps:
       - uses: actions/checkout@v4
 
