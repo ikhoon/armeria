@@ -5,9 +5,9 @@ plugins {
 
 dependencies {
     implementation(project(':kubernetes'))
+    implementation(libs.logback13)
     implementation(libs.picocli)
     testImplementation(libs.kubernetes.junit.jupiter)
-    implementation(libs.logback13)
 }
 
 task copyDependencies(type: Copy) {

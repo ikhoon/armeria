@@ -56,19 +56,19 @@ jobs:
         env:
           CHAOS_TEST: network-delay.yaml
         run: |
-          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --info
         shell: bash
 
       - name: Run Chaos Tests - network-loss.yaml
         env:
           CHAOS_TEST: network-loss.yaml
         run: |
-          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --rerun-tasks
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --info --rerun-tasks
         shell: bash
 
       - name: Run Chaos Tests - network-duplication.yaml
         env:
           CHAOS_TEST: network-duplication.yaml
         run: |
-          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --rerun-tasks
+          ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:test --info --rerun-tasks
         shell: bash
