@@ -51,6 +51,7 @@ jobs:
         run: |
           eval $(minikube -p minikube docker-env)
           ./gradlew --no-daemon --stacktrace :it:kubernetes-chaos-tests:k8sBuild
+          docker images
         shell: bash
 
       - name: Run Chaos Tests - network-delay.yaml
