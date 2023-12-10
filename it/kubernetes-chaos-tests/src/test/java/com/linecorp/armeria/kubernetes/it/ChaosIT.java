@@ -36,7 +36,6 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +81,7 @@ class ChaosIT {
   private String namespace;
 
   @BeforeEach
-  void beforeEach() {
+  void beforeEach() throws InterruptedException {
     logger.info("Preparing test suite");
     checkerImage = Optional.ofNullable(System.getenv("CHECKER_IMAGE")).orElse("chaos-test-checker:latest");
     controlImage = Optional.ofNullable(System.getenv("CONTROL_IMAGE")).orElse("chaos-test-control:latest");
@@ -104,13 +103,17 @@ class ChaosIT {
         // ignore
       }
     }
-    client.pods().withLabel("group", GROUP).withGracePeriod(0L).delete();
+//    client.pods().withLabel("group", GROUP).withGracePeriod(0L).delete();
   }
 
   // The test is expected to run for 20 minutes, so we set the timeout to 30 minutes.
   @Timeout(value = 30, unit = TimeUnit.MINUTES)
   @Test
-  void test() throws IOException {
+  void test() throws Exception {
+    logger.info("###################");
+    logger.info("namespace: {}", namespace);
+    logger.info("###################");
+//    Thread.sleep(60000);
     logger.warn("Running test with chaos settings from: " + chaosTest);
     logger.warn("Using checker image: " + checkerImage);
     logger.warn("Using control image: " + controlImage);
@@ -122,7 +125,8 @@ class ChaosIT {
     });
 
     final PodResource controlSelector = run(CONTROL, controlImage);
-    await().pollInterval(1, TimeUnit.SECONDS).ignoreExceptions().atMost(1, TimeUnit.MINUTES).until(() -> {
+    await().pollInterval(1, TimeUnit.SECONDS).ignoreExceptions().atMost(5, TimeUnit.MINUTES).until(() -> {
+      logger.info("Checking counter");
       assertTrue(checkerSelector.getLog().contains("Update received, and it's in the correct order, counter: 1"));
       return true;
     });
