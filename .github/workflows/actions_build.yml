@@ -41,7 +41,7 @@ jobs:
 
   build:
     needs: [ choose-self-hosted ]
-    if: github.repository == 'line/armeria'
+    if: github.repository == 'ikhoon/armeria'
     runs-on: ${{ matrix.on }}
     timeout-minutes: 120
     strategy:
@@ -61,7 +61,8 @@ jobs:
             on: ${{ needs.choose-self-hosted.outputs.runner }}
             min-java: 11
           - java: 17
-            on: ${{ needs.choose-self-hosted.outputs.runner }}
+            # TODO(ikhoon): Revert after testing
+            on: ubuntu-latest
             min-java: 17
             coverage: true
           - java: 21
@@ -193,7 +194,7 @@ jobs:
 
       - name: Upload the coverage report to Codecov
         if: ${{ matrix.coverage }}
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
 
       - name: Fail the run if any threads were blocked
         if: ${{ matrix.blockhound }}
