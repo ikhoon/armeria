@@ -82,6 +82,12 @@ configure(projectsWithFlags('java')) {
                             artifact = artifactName
                         }
                     }
+
+                    if (managedVersions.containsKey('build.buf.protoc-gen-validate:protoc-gen-validate')) {
+                        javapgv {
+                            artifact = "build.buf.protoc-gen-validate:protoc-gen-validate:${managedVersions['build.buf.protoc-gen-validate:protoc-gen-validate']}"
+                        }
+                    }
                 }
                 generateProtoTasks {
                     all()*.plugins {
@@ -107,6 +113,12 @@ configure(projectsWithFlags('java')) {
                             }
                             if (project.ext.hasFlag('akka-grpc_2.13') && managedVersions.containsKey('com.lightbend.akka.grpc:akka-grpc-runtime_2.13')) {
                                 akkaGrpc {}
+                            }
+
+                            if (managedVersions.containsKey('build.buf.protoc-gen-validate:protoc-gen-validate')) {
+                                javapgv {
+                                    option "lang=java"
+                                }
                             }
                         }
                     }

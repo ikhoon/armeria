@@ -40,7 +40,7 @@ gax-grpc = "2.57.0"
 # Don"t upgrade graphql-java to 21.0 that requires Java 11
 graphql-java = "20.4"
 graphql-kotlin = "8.2.1"
-grpc-java = "1.68.1"
+grpc-java = "1.61.1"
 grpc-kotlin = "1.4.1"
 guava = "33.3.1-jre"
 hamcrest = "3.0"
@@ -118,9 +118,11 @@ prometheus-legacy = "0.16.0"
 # See: https://github.com/grpc/grpc-java/blob/master/gradle/libs.versions.toml
 #      (Switch to the right tag and look for "protobuf".)
 #      e.g. https://github.com/grpc/grpc-java/blob/v1.48.0/gradle/libs.versions.toml
-protobuf = "3.25.5"
+protobuf = "3.25.1"
 protobuf-gradle-plugin = "0.8.19"
 protobuf-jackson = "2.6.0"
+protoc-gen-validate = "1.1.0"
+protovalidate-java = "0.4.2"
 reactive-grpc = "1.2.4"
 reactive-streams = "1.0.4"
 reactor = "3.6.11"
@@ -994,6 +996,19 @@ module = "org.curioswitch.curiostack:protobuf-jackson"
 version.ref = "protobuf-jackson"
 exclusions = "javax.annotation:javax.annotation-api"
 javadocs = "https://developers.curioswitch.org/apidocs/java/"
+
+[libraries.protoc-gen-validate]
+module = "build.buf.protoc-gen-validate:protoc-gen-validate"
+version.ref = "protoc-gen-validate"
+[libraries.pgv-java-stub]
+module = "build.buf.protoc-gen-validate:pgv-java-stub"
+version.ref = "protoc-gen-validate"
+[libraries.pgv-java-grpc]
+module = "build.buf.protoc-gen-validate:pgv-java-grpc"
+version.ref = "protoc-gen-validate"
+[libraries.protovalidate-java]
+module = "build.buf:protovalidate"
+version.ref = "protovalidate-java"
 
 [libraries.reactor-core]
 module = "io.projectreactor:reactor-core"

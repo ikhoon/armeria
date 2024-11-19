@@ -29,9 +29,9 @@ import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.testing.junit5.server.ServerExtension;
 
 import io.grpc.stub.StreamObserver;
+import testing.grpc.TranscodingVerb.Simple;
+import testing.grpc.TranscodingVerb.UnderScore;
 import testing.grpc.TranscodingVerbServiceGrpc;
-import testing.grpc.Verb.Simple;
-import testing.grpc.Verb.UnderScore;
 
 class TranscodingVerbTest {
 
