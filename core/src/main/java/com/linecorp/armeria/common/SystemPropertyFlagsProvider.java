@@ -40,7 +40,6 @@ import com.linecorp.armeria.client.ResponseTimeoutMode;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.util.InetAddressPredicates;
 import com.linecorp.armeria.common.util.Sampler;
-import com.linecorp.armeria.common.util.TlsEngineType;
 import com.linecorp.armeria.common.util.TransportType;
 import com.linecorp.armeria.server.MultipartRemovalStrategy;
 import com.linecorp.armeria.server.TransientServiceOption;
@@ -180,6 +179,40 @@ final class SystemPropertyFlagsProvider implements FlagsProvider {
     @Override
     public Boolean dumpOpenSslInfo() {
         return getBoolean("dumpOpenSslInfo");
+    }
+
+    @Nullable
+    @Override
+    public TlsCipherSuitePreset serverTlsCipherSuitePreset() {
+        final String serverTlsCipherSuitePreset = getNormalized("serverTlsCipherSuitePreset");
+        if (serverTlsCipherSuitePreset == null) {
+            return null;
+        }
+        return toTlsCipherSuitePreset(serverTlsCipherSuitePreset);
+    }
+
+    @Nullable
+    @Override
+    public TlsCipherSuitePreset clientTlsCipherSuitePreset() {
+        final String clientTlsCipherSuitePreset = getNormalized("clientTlsCipherSuitePreset");
+        if (clientTlsCipherSuitePreset == null) {
+            return null;
+        }
+        return toTlsCipherSuitePreset(clientTlsCipherSuitePreset);
+    }
+
+    private static TlsCipherSuitePreset toTlsCipherSuitePreset(String value) {
+        switch (value) {
+            case "restrict":
+                return TlsCipherSuitePreset.RESTRICT;
+            case "modern":
+                return TlsCipherSuitePreset.MODERN;
+            case "compatible":
+                return TlsCipherSuitePreset.COMPATIBLE;
+            default:
+                throw new IllegalArgumentException(
+                        value + " isn't one of 'restrict', 'modern' or 'compatible'");
+        }
     }
 
     @Nullable

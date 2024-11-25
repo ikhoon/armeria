@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import com.linecorp.armeria.common.annotation.Nullable;
-import com.linecorp.armeria.common.util.TlsEngineType;
+import com.linecorp.armeria.common.TlsEngineType;
 
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
@@ -76,9 +76,26 @@ public final class SslContextUtil {
                                                                          "TLS_AES_128_GCM_SHA256");
 
     public static final List<String> DEFAULT_CIPHERS = ImmutableList.<String>builder()
-            .addAll(TLS_V13_CIPHERS)
-            .addAll(Http2SecurityUtil.CIPHERS)
-            .build();
+                                                                    .addAll(TLS_V13_CIPHERS)
+                                                                    .addAll(Http2SecurityUtil.CIPHERS)
+                                                                    .build();
+
+    // Copied from https://github.com/square/okhttp/blob/f1e6d01aea30844f0ddc7394208ec13d59d5e6f8/okhttp/src/main/kotlin/okhttp3/ConnectionSpec.kt#L319C1-L342
+    // This is nearly equal to the cipher suites supported in Chrome 72, current as of 2019-02-24.
+    public static final List<String> APPROVED_CIPHERS =
+            ImmutableList.<String>builder()
+                         .addAll(TLS_V13_CIPHERS)
+                         .addAll(Http2SecurityUtil.CIPHERS)
+                         // Note that the following cipher suites are all on HTTP/2's bad cipher suites list.
+                         // We'll continue to include them until better suites are commonly available.
+                         .add("TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA")
+                         .add("TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA")
+                         .add("TLS_RSA_WITH_AES_128_GCM_SHA256")
+                         .add("TLS_RSA_WITH_AES_256_GCM_SHA384")
+                         .add("TLS_RSA_WITH_AES_128_CBC_SHA")
+                         .add("TLS_RSA_WITH_AES_256_CBC_SHA")
+                         .add("TLS_RSA_WITH_3DES_EDE_CBC_SHA")
+                         .build();
 
     public static final List<String> DEFAULT_PROTOCOLS = ImmutableList.of("TLSv1.3", "TLSv1.2");
 

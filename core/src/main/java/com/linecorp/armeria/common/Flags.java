@@ -55,7 +55,6 @@ import com.linecorp.armeria.common.annotation.UnstableApi;
 import com.linecorp.armeria.common.util.Exceptions;
 import com.linecorp.armeria.common.util.Sampler;
 import com.linecorp.armeria.common.util.SystemInfo;
-import com.linecorp.armeria.common.util.TlsEngineType;
 import com.linecorp.armeria.common.util.TransportType;
 import com.linecorp.armeria.internal.common.FlagsLoaded;
 import com.linecorp.armeria.internal.common.util.SslContextUtil;
@@ -443,6 +442,12 @@ public final class Flags {
     private static final ResponseTimeoutMode RESPONSE_TIMEOUT_MODE =
             getValue(FlagsProvider::responseTimeoutMode, "responseTimeoutMode");
 
+    private static final TlsCipherSuitePreset SERVER_TLS_CIPHER_SUITE_PRESET=
+            getValue(FlagsProvider::serverTlsCipherSuitePreset, "serverTlsCipherSuitePreset");
+
+    private static final TlsCipherSuitePreset CLIENT_TLS_CIPHER_SUITE_PRESET=
+            getValue(FlagsProvider::clientTlsCipherSuitePreset, "clientTlsCipherSuitePreset");
+
     /**
      * Returns the specification of the {@link Sampler} that determines whether to retain the stack
      * trace of the exceptions that are thrown frequently by Armeria. A sampled exception will have the stack
@@ -668,6 +673,28 @@ public final class Flags {
         detectTlsEngineAndDumpOpenSslInfo();
         assert dumpOpenSslInfo != null;
         return dumpOpenSslInfo;
+    }
+
+    /**
+     * Returns the default server-side TLS cipher suite preset.
+     *
+     * <p>The default value of this flag is {@link TlsCipherSuitePreset#RESTRICT}.
+     * Specify the {@code -Dcom.linecorp.armeria.serverTlsCipherSuitePreset=<restrict|modern|compatible>} to
+     * override the default value.
+     */
+    public static TlsCipherSuitePreset serverTlsCipherSuitePreset() {
+        return SERVER_TLS_CIPHER_SUITE_PRESET;
+    }
+
+    /**
+     * Returns the default client-side TLS cipher suite preset.
+     *
+     * <p>The default value of this flag is {@link TlsCipherSuitePreset#MODERN}.
+     * Specify the {@code -Dcom.linecorp.armeria.serverTlsCipherSuitePreset=<restrict|modern|compatible>} to
+     * override the default value.
+     */
+    public static TlsCipherSuitePreset clientTlsCipherSuitePreset() {
+        return CLIENT_TLS_CIPHER_SUITE_PRESET;
     }
 
     /**

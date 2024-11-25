@@ -16,6 +16,7 @@
 
 package com.linecorp.armeria.common;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -31,6 +32,9 @@ import io.netty.handler.ssl.SslContextBuilder;
 @UnstableApi
 public abstract class AbstractTlsConfig {
 
+    private final TlsEngineType tlsEngineType;
+    private final List<TlsVersion> tlsVersions;
+    private final List<String> ciphers;
     private final boolean allowsUnsafeCiphers;
 
     @Nullable
@@ -41,11 +45,36 @@ public abstract class AbstractTlsConfig {
     /**
      * Creates a new instance.
      */
-    protected AbstractTlsConfig(boolean allowsUnsafeCiphers, @Nullable MeterIdPrefix meterIdPrefix,
+    protected AbstractTlsConfig(TlsEngineType tlsEngineType, List<TlsVersion> tlsVersions, List<String> ciphers,
+                                boolean allowsUnsafeCiphers, @Nullable MeterIdPrefix meterIdPrefix,
                                 Consumer<SslContextBuilder> tlsCustomizer) {
+        this.tlsEngineType = tlsEngineType;
+        this.tlsVersions = tlsVersions;
+        this.ciphers = ciphers;
         this.allowsUnsafeCiphers = allowsUnsafeCiphers;
         this.meterIdPrefix = meterIdPrefix;
         this.tlsCustomizer = tlsCustomizer;
+    }
+
+    /**
+     * Returns the {@link TlsEngineType} to use for the TLS handshake.
+     */
+    public final TlsEngineType tlsEngineType() {
+        return tlsEngineType;
+    }
+
+    /**
+     * Returns the {@link TlsVersion}s to enable for the TLS handshake.
+     */
+    public final List<TlsVersion> tlsVersions() {
+        return tlsVersions;
+    }
+
+    /**
+     * Returns the ciphers to enable for the TLS handshake.
+     */
+    public final List<String> ciphers() {
+        return ciphers;
     }
 
     /**
@@ -80,13 +109,15 @@ public abstract class AbstractTlsConfig {
             return false;
         }
         final AbstractTlsConfig that = (AbstractTlsConfig) o;
-        return allowsUnsafeCiphers == that.allowsUnsafeCiphers &&
+        return tlsVersions.equals(that.tlsVersions) &&
+               ciphers.equals(that.ciphers) &&
+               allowsUnsafeCiphers == that.allowsUnsafeCiphers &&
                Objects.equals(meterIdPrefix, that.meterIdPrefix) &&
                tlsCustomizer.equals(that.tlsCustomizer);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(allowsUnsafeCiphers, meterIdPrefix, tlsCustomizer);
+        return Objects.hash(tlsVersions, ciphers, allowsUnsafeCiphers, meterIdPrefix, tlsCustomizer);
     }
 }

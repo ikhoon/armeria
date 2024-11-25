@@ -17,6 +17,7 @@
 package com.linecorp.armeria.internal.common;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.linecorp.armeria.internal.common.util.SslContextUtil.createSslContext;
 
 import java.security.cert.X509Certificate;
@@ -33,11 +34,12 @@ import com.linecorp.armeria.client.ClientTlsConfig;
 import com.linecorp.armeria.common.AbstractTlsConfig;
 import com.linecorp.armeria.common.TlsKeyPair;
 import com.linecorp.armeria.common.TlsProvider;
+import com.linecorp.armeria.common.TlsVersion;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.metric.CloseableMeterBinder;
 import com.linecorp.armeria.common.metric.MeterIdPrefix;
 import com.linecorp.armeria.common.metric.MoreMeterBinders;
-import com.linecorp.armeria.common.util.TlsEngineType;
+import com.linecorp.armeria.common.TlsEngineType;
 import com.linecorp.armeria.internal.common.util.ReentrantShortLock;
 import com.linecorp.armeria.server.ServerTlsConfig;
 
@@ -66,6 +68,7 @@ public final class SslContextFactory {
     @Nullable
     private final MeterIdPrefix meterIdPrefix;
     private final boolean allowsUnsafeCiphers;
+    private final List<String> tlsVersions;
 
     private final ReentrantShortLock lock = new ReentrantShortLock();
 
@@ -81,6 +84,9 @@ public final class SslContextFactory {
             this.tlsConfig = tlsConfig;
             meterIdPrefix = tlsConfig.meterIdPrefix();
             allowsUnsafeCiphers = tlsConfig.allowsUnsafeCiphers();
+            tlsVersions = tlsConfig.tlsVersions().stream()
+                                   .map(TlsVersion::asString)
+                                   .collect(toImmutableList());
         } else {
             this.tlsConfig = null;
             meterIdPrefix = null;
@@ -209,6 +215,7 @@ public final class SslContextFactory {
             return;
         }
 
+        contextBuilder.protocols(tlsVersions);
         if (tlsConfig instanceof ServerTlsConfig) {
             final ServerTlsConfig serverTlsConfig = (ServerTlsConfig) tlsConfig;
             contextBuilder.clientAuth(serverTlsConfig.clientAuth());

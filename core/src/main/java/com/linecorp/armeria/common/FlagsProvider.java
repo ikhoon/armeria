@@ -43,7 +43,6 @@ import com.linecorp.armeria.common.annotation.UnstableApi;
 import com.linecorp.armeria.common.util.Exceptions;
 import com.linecorp.armeria.common.util.Sampler;
 import com.linecorp.armeria.common.util.SystemInfo;
-import com.linecorp.armeria.common.util.TlsEngineType;
 import com.linecorp.armeria.common.util.TransportType;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.MultipartRemovalStrategy;
@@ -235,6 +234,16 @@ public interface FlagsProvider {
      */
     @Nullable
     default Boolean dumpOpenSslInfo() {
+        return null;
+    }
+
+    @Nullable
+    default TlsCipherSuitePreset serverTlsCipherSuitePreset() {
+        return null;
+    }
+
+    @Nullable
+    default TlsCipherSuitePreset clientTlsCipherSuitePreset() {
         return null;
     }
 

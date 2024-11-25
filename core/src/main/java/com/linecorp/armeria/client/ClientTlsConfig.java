@@ -16,6 +16,7 @@
 
 package com.linecorp.armeria.client;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -24,9 +25,11 @@ import com.google.common.base.MoreObjects;
 
 import com.linecorp.armeria.common.AbstractTlsConfig;
 import com.linecorp.armeria.common.TlsProvider;
+import com.linecorp.armeria.common.TlsVersion;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.annotation.UnstableApi;
 import com.linecorp.armeria.common.metric.MeterIdPrefix;
+import com.linecorp.armeria.common.TlsEngineType;
 
 import io.netty.handler.ssl.SslContextBuilder;
 
@@ -48,10 +51,11 @@ public final class ClientTlsConfig extends AbstractTlsConfig {
     private final boolean tlsNoVerifySet;
     private final Set<String> insecureHosts;
 
-    ClientTlsConfig(boolean allowsUnsafeCiphers, @Nullable MeterIdPrefix meterIdPrefix,
+    ClientTlsConfig(TlsEngineType tlsEngineType, List<TlsVersion> tlsVersions, List<String> ciphers,
+                    boolean allowsUnsafeCiphers, @Nullable MeterIdPrefix meterIdPrefix,
                     Consumer<SslContextBuilder> tlsCustomizer, boolean tlsNoVerifySet,
                     Set<String> insecureHosts) {
-        super(allowsUnsafeCiphers, meterIdPrefix, tlsCustomizer);
+        super(tlsEngineType, tlsVersions, ciphers, allowsUnsafeCiphers, meterIdPrefix, tlsCustomizer);
         this.tlsNoVerifySet = tlsNoVerifySet;
         this.insecureHosts = insecureHosts;
     }
@@ -94,6 +98,9 @@ public final class ClientTlsConfig extends AbstractTlsConfig {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
+                          .omitNullValues()
+                          .add("tlsVersions", tlsVersions())
+                          .add("ciphers", ciphers())
                           .add("allowsUnsafeCiphers", allowsUnsafeCiphers())
                           .add("meterIdPrefix", meterIdPrefix())
                           .add("tlsCustomizer", tlsCustomizer())

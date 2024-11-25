@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import com.linecorp.armeria.common.Flags;
 import com.linecorp.armeria.common.TlsKeyPair;
 import com.linecorp.armeria.common.TlsProvider;
-import com.linecorp.armeria.common.util.TlsEngineType;
+import com.linecorp.armeria.common.TlsEngineType;
 
 class TlsProviderMappingTest {
 

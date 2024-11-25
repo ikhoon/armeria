@@ -82,7 +82,7 @@ import com.linecorp.armeria.common.logging.RequestLogBuilder;
 import com.linecorp.armeria.common.util.BlockingTaskExecutor;
 import com.linecorp.armeria.common.util.EventLoopGroups;
 import com.linecorp.armeria.common.util.SystemInfo;
-import com.linecorp.armeria.common.util.TlsEngineType;
+import com.linecorp.armeria.common.TlsEngineType;
 import com.linecorp.armeria.internal.common.util.SelfSignedCertificate;
 import com.linecorp.armeria.internal.server.RouteDecoratingService;
 import com.linecorp.armeria.internal.server.RouteUtil;
@@ -130,14 +130,9 @@ public final class VirtualHostBuilder implements TlsSetters, ServiceConfigsBuild
     private Supplier<SslContextBuilder> sslContextBuilderSupplier;
     @Nullable
     private Boolean tlsSelfSigned;
-    @Nullable
-    private SelfSignedCertificate selfSignedCertificate;
-    @Nullable
-    private Consumer<SslContextBuilder> tlsCustomizer;
-    @Nullable
-    private Boolean tlsAllowUnsafeCiphers;
-    @Nullable
-    private TlsEngineType tlsEngineType;
+
+    private ServerTlsConfigBuilder serverTlsConfigBuilder = ServerTlsConfig.builder();
+
     private final LinkedList<RouteDecoratingService> routeDecoratingServices = new LinkedList<>();
     @Nullable
     private Function<? super VirtualHost, ? extends Logger> accessLoggerMapper;

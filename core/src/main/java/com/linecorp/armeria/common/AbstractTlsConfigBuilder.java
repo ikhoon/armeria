@@ -18,10 +18,13 @@ package com.linecorp.armeria.common;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.annotation.UnstableApi;
@@ -42,10 +45,95 @@ public abstract class AbstractTlsConfigBuilder<SELF extends AbstractTlsConfigBui
     @Nullable
     private MeterIdPrefix meterIdPrefix;
 
+    private TlsEngineType tlsEngineType = Flags.tlsEngineType();
+    private List<TlsVersion> tlsVersions;
+    private List<String> ciphers;
+
     /**
      * Creates a new instance.
      */
-    protected AbstractTlsConfigBuilder() {}
+    protected AbstractTlsConfigBuilder(TlsCipherSuitePreset tlsCipherSuitePreset) {
+        tlsVersions = tlsCipherSuitePreset.tlsVersions();
+        ciphers = tlsCipherSuitePreset.ciphers();
+    }
+
+    /**
+     * Sets the {@link TlsEngineType}.
+     *
+     * <p>If unspecified, {@link Flags#tlsEngineType()} is used.
+     */
+    public SELF tlsEngineType(TlsEngineType tlsEngineType) {
+        requireNonNull(tlsEngineType, "tlsEngineType");
+        this.tlsEngineType = tlsEngineType;
+        return self();
+    }
+
+    /**
+     * Returns the {@link TlsEngineType}.
+     */
+    protected final TlsEngineType tlsEngineType() {
+        return tlsEngineType;
+    }
+
+    /**
+     * Sets the {@link TlsVersion}s to enable for the TLS handshake.
+     *
+     * <p>If unspecified, {@link Flags#serverTlsCipherSuitePreset()} is used for the server side and
+     * {@link Flags#clientTlsCipherSuitePreset()} is used for the client side.
+     */
+    public SELF tlsVersions(TlsVersion... tlsVersions) {
+        requireNonNull(tlsVersions, "tlsVersions");
+        return tlsVersions(ImmutableList.copyOf(tlsVersions));
+    }
+
+    /**
+     * Sets the {@link TlsVersion}s to enable for the TLS handshake.
+     *
+     * <p>If unspecified, {@link Flags#serverTlsCipherSuitePreset()} is used for the server side and
+     * {@link Flags#clientTlsCipherSuitePreset()} is used for the client side.
+     */
+    public SELF tlsVersions(Iterable<TlsVersion> tlsVersions) {
+        requireNonNull(tlsVersions, "tlsVersions");
+        this.tlsVersions = ImmutableList.copyOf(tlsVersions);
+        return self();
+    }
+
+    /**
+     * Returns the {@link TlsVersion}s to enable for the TLS handshake.
+     */
+    protected final List<TlsVersion> tlsVersions() {
+        return tlsVersions;
+    }
+
+    /**
+     * Sets the cipher suites to enable, in the order of preference.
+     *
+     * <p>If unspecified, {@link Flags#serverTlsCipherSuitePreset()} is used for the server side and
+     * {@link Flags#clientTlsCipherSuitePreset()} is used for the client side.
+     */
+    public SELF ciphers(String... cipherSuites) {
+        requireNonNull(cipherSuites, "cipherSuites");
+        return ciphers(ImmutableList.copyOf(cipherSuites));
+    }
+
+    /**
+     * Sets the cipher suites to enable, in the order of preference.
+     *
+     * <p>If unspecified, {@link Flags#serverTlsCipherSuitePreset()} is used for the server side and
+     * {@link Flags#clientTlsCipherSuitePreset()} is used for the client side.
+     */
+    public SELF ciphers(Iterable<String> ciphers) {
+        requireNonNull(ciphers, "ciphers");
+        this.ciphers = ImmutableList.copyOf(ciphers);
+        return self();
+    }
+
+    /**
+     * Returns the ciphers to enable for the TLS handshake.
+     */
+    protected final List<String> ciphers() {
+        return ciphers;
+    }
 
     /**
      * Allows the bad cipher suites listed in
@@ -96,6 +184,7 @@ public abstract class AbstractTlsConfigBuilder<SELF extends AbstractTlsConfigBui
     /**
      * Returns the {@link Consumer} which can arbitrarily configure the {@link SslContextBuilder}.
      */
+    @Deprecated
     protected final Consumer<SslContextBuilder> tlsCustomizer() {
         return tlsCustomizer;
     }

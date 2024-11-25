@@ -34,7 +34,6 @@ import org.junitpioneer.jupiter.SetSystemProperty;
 
 import com.linecorp.armeria.common.util.Exceptions;
 import com.linecorp.armeria.common.util.InetAddressPredicates;
-import com.linecorp.armeria.common.util.TlsEngineType;
 
 import io.micrometer.core.instrument.Metrics;
 

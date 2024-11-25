@@ -370,6 +370,7 @@ public final class ArmeriaConfigurationUtil {
         if (sslStoreProvider != null) {
             store = sslStoreProvider.get();
         } else {
+            // TODO(ikhoon): Extract trusted certificate from the key store using KeyStoreUtil.
             store = loadKeyStore(ssl.getTrustStoreType(), ssl.getTrustStore(), ssl.getTrustStorePassword());
         }
 

@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import com.linecorp.armeria.common.AbstractTlsConfigBuilder;
+import com.linecorp.armeria.common.Flags;
 import com.linecorp.armeria.common.annotation.UnstableApi;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -40,7 +41,9 @@ public final class ClientTlsConfigBuilder extends AbstractTlsConfigBuilder<Clien
     private boolean tlsNoVerifySet;
     private final Set<String> insecureHosts = new HashSet<>();
 
-    ClientTlsConfigBuilder() {}
+    ClientTlsConfigBuilder() {
+        super(Flags.clientTlsCipherSuitePreset());
+    }
 
     /**
      * Disables the verification of server's TLS certificate chain. If you want to disable verification for
@@ -89,7 +92,8 @@ public final class ClientTlsConfigBuilder extends AbstractTlsConfigBuilder<Clien
      * Returns a newly-created {@link ClientTlsConfig} based on the properties of this builder.
      */
     public ClientTlsConfig build() {
-        return new ClientTlsConfig(allowsUnsafeCiphers(), meterIdPrefix(), tlsCustomizer(),
+        return new ClientTlsConfig(tlsEngineType(), tlsVersions(), ciphers(), allowsUnsafeCiphers(),
+                                   meterIdPrefix(), tlsCustomizer(),
                                    tlsNoVerifySet, ImmutableSet.copyOf(insecureHosts));
     }
 }

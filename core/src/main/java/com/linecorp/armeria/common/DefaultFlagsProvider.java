@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSet;
 
 import com.linecorp.armeria.client.ResponseTimeoutMode;
 import com.linecorp.armeria.common.util.Sampler;
-import com.linecorp.armeria.common.util.TlsEngineType;
 import com.linecorp.armeria.common.util.TransportType;
 import com.linecorp.armeria.server.MultipartRemovalStrategy;
 import com.linecorp.armeria.server.TransientServiceOption;
@@ -178,6 +177,16 @@ final class DefaultFlagsProvider implements FlagsProvider {
     @Override
     public Boolean dumpOpenSslInfo() {
         return false;
+    }
+
+    @Override
+    public TlsCipherSuitePreset serverTlsCipherSuitePreset() {
+        return TlsCipherSuitePreset.RESTRICT;
+    }
+
+    @Override
+    public TlsCipherSuitePreset clientTlsCipherSuitePreset() {
+        return TlsCipherSuitePreset.MODERN;
     }
 
     @Override
