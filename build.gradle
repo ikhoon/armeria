@@ -16,6 +16,7 @@ buildscript {
 }
 
 plugins {
+    id 'base'
     id 'jvm-toolchains'
     alias libs.plugins.osdetector apply false
     alias libs.plugins.scalafmt apply false

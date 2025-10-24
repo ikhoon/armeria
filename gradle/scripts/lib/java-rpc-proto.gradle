@@ -23,11 +23,11 @@ configure(projectsWithFlags('java')) {
                     attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage, Usage.JAVA_API))
                 }
             }
-            jmhCompileProtoPath {
-                attributes {
-                    attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage, Usage.JAVA_API))
-                }
-            }
+//            jmhCompileProtoPath {
+//                attributes {
+//                    attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage, Usage.JAVA_API))
+//                }
+//            }
             testCompileProtoPath {
                 attributes {
                     attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage, Usage.JAVA_API))
@@ -99,34 +99,36 @@ configure(projectsWithFlags('java')) {
                 }
 
                 generateProtoTasks {
-                    all()*.plugins {
-                        if (project.ext.hasFlag('scala-grpc_2.13') && managedVersions.containsKey('com.thesamet.scalapb:scalapb-runtime_2.13')) {
-                            scalapb {
-                                option 'grpc'
+                    all().configureEach { t ->
+                        t.plugins {
+                            if (project.ext.hasFlag('scala-grpc_2.13') && managedVersions.containsKey('com.thesamet.scalapb:scalapb-runtime_2.13')) {
+                                scalapb {
+                                    option 'grpc'
+                                }
+                            } else {
+                                grpc {
+                                    option 'enable_deprecated=false'
+                                }
+                                if (project.ext.hasFlag('reactor-grpc') && managedVersions.containsKey('com.salesforce.servicelibs:reactor-grpc')) {
+                                    reactorGrpc {}
+                                }
+                                if (project.ext.hasFlag('rxgrpc') && managedVersions.containsKey('com.salesforce.servicelibs:rxgrpc')) {
+                                    rxgrpc {}
+                                }
+                                if (project.ext.hasFlag('kotlin-grpc') && managedVersions.containsKey('io.grpc:grpc-kotlin-stub')) {
+                                    kotlinGrpc {}
+                                }
+                                if (project.ext.hasFlag('krotodc-grpc') && managedVersions.containsKey('io.github.mscheong01:protoc-gen-krotoDC')) {
+                                    krotodcGrpc {}
+                                }
+                                if (project.ext.hasFlag('akka-grpc_2.13') && managedVersions.containsKey('com.lightbend.akka.grpc:akka-grpc-runtime_2.13')) {
+                                    akkaGrpc {}
+                                }
                             }
-                        } else {
-                            grpc {
-                                option 'enable_deprecated=false'
-                            }
-                            if (project.ext.hasFlag('reactor-grpc') && managedVersions.containsKey('com.salesforce.servicelibs:reactor-grpc')) {
-                                reactorGrpc {}
-                            }
-                            if (project.ext.hasFlag('rxgrpc') && managedVersions.containsKey('com.salesforce.servicelibs:rxgrpc')) {
-                                rxgrpc {}
-                            }
-                            if (project.ext.hasFlag('kotlin-grpc') && managedVersions.containsKey('io.grpc:grpc-kotlin-stub')) {
-                                kotlinGrpc {}
-                            }
-                            if (project.ext.hasFlag('krotodc-grpc') && managedVersions.containsKey('io.github.mscheong01:protoc-gen-krotoDC')) {
-                                krotodcGrpc {}
-                            }
-                            if (project.ext.hasFlag('akka-grpc_2.13') && managedVersions.containsKey('com.lightbend.akka.grpc:akka-grpc-runtime_2.13')) {
-                                akkaGrpc {}
-                            }
-                        }
-                        if (project.ext.hasFlag('javapgv')) {
-                            javapgv {
-                                option "lang=java"
+                            if (project.ext.hasFlag('javapgv')) {
+                                javapgv {
+                                    option "lang=java"
+                                }
                             }
                         }
                     }

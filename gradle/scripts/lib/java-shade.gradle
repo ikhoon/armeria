@@ -25,7 +25,7 @@ configure(relocatedProjects) {
             dependsOn: tasks.classes) {
 
         configureShadowTask(project, delegate, true)
-        archiveBaseName.set("${project.archivesBaseName}-shaded")
+        archiveClassifier.set('shaded')
 
         // Exclude the legacy file listing.
         exclude '/META-INF/INDEX.LIST'
@@ -110,6 +110,19 @@ configure(relocatedProjects) {
     }
 }
 
+configure(relocatedProjects) {
+    configurations {
+        proguardLibraryJarsElements {
+            canBeConsumed = true
+            canBeResolved = false
+            extendsFrom configurations.dependencyManagement   // OK: same project
+            attributes {
+                attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+            }
+        }
+    }
+}
+
 // NB: Configure in a new closure so that all relocated projects have a 'shadedJar' task.
 configure(relocatedProjects) {
     if (project.hasFlags('trim')) {
@@ -151,11 +164,18 @@ configure(relocatedProjects) {
                 if (!p.hasFlags('no_aggregation')) {
                     def configName = "proguardLibraryJars_${p.path.replace(':', '_')}"
                     def proguardLibraryJars = configurations.create(configName) {
-                        extendsFrom(p.configurations.dependencyManagement)
+                        canBeConsumed = false
+                        canBeResolved = true
+                        // add attributes to match producer if you set any
+                        attributes {
+                            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+                        }
                     }
 
                     proguardLibraryConfigs.add(proguardLibraryJars)
-                    dependencies.add(proguardLibraryJars.getName(), dependencies.project([path: p.path]))
+                    dependencies {
+                        add(proguardLibraryJars.getName(), project(path: p.path, configuration: 'proguardLibraryJarsElements'))
+                    }
                 }
             }
 
@@ -368,7 +388,7 @@ private Configuration configureShadedTestImplementConfiguration(
     def targetConfigurationName
     if (project == recursedProject) {
         targetConfigurationName = 'testRuntimeClasspath'
-    }  else {
+    } else {
         targetConfigurationName = 'runtimeClasspath'
     }
     def projectDependencies = []
