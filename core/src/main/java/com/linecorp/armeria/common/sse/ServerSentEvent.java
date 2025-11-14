@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 import org.reactivestreams.Publisher;
 
 import com.linecorp.armeria.common.annotation.Nullable;
+import com.linecorp.armeria.common.annotation.UnstableApi;
+import com.linecorp.armeria.common.stream.HttpDecoder;
 import com.linecorp.armeria.server.annotation.ProducesEventStream;
 import com.linecorp.armeria.server.annotation.ServerSentEventResponseConverterFunction;
 
@@ -84,6 +86,14 @@ public interface ServerSentEvent {
     }
 
     /**
+     * Returns a new {@link HttpDecoder} that decodes a stream of {@link ServerSentEvent}s.
+     */
+    @UnstableApi
+    static HttpDecoder<ServerSentEvent> decoder() {
+        return new ServerSentEventDecoder();
+    }
+
+    /**
      * Returns an ID of this event, if it exists. Otherwise, {@code null} will be returned.
      */
     @Nullable
@@ -112,4 +122,13 @@ public interface ServerSentEvent {
      */
     @Nullable
     String data();
+
+    /**
+     * Converts this {@link ServerSentEvent} into a {@link String} in text/event-stream format defined by
+     * the <a href="https://www.w3.org/TR/eventsource/">Server-Sent Events</a> specification.
+     */
+    @UnstableApi
+    default String toEventStreamString() {
+        return DefaultServerSentEvent.toEventStreamString(this);
+    }
 }

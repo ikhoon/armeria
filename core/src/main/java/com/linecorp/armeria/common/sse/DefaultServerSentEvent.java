@@ -28,6 +28,11 @@ import com.linecorp.armeria.common.annotation.Nullable;
 final class DefaultServerSentEvent implements ServerSentEvent {
 
     /**
+     * A line feed character which marks the end of a field in Server-Sent Events.
+     */
+    private static final char LINE_FEED = '\n';
+
+    /**
      * An empty {@link ServerSentEvent} instance.
      */
     static final ServerSentEvent EMPTY = new DefaultServerSentEvent(null, null, null, null, null);
@@ -83,6 +88,65 @@ final class DefaultServerSentEvent implements ServerSentEvent {
     @Override
     public String data() {
         return data;
+    }
+
+
+    static String toEventStreamString(ServerSentEvent sse) {
+        final StringBuilder sb = new StringBuilder();
+
+        // Write a comment first because a user might want to explain his or her event at first line.
+        final String comment = sse.comment();
+        if (comment != null) {
+            appendField(sb, "", comment, false);
+        }
+
+        final String id = sse.id();
+        if (id != null) {
+            appendField(sb, "id", id, true);
+        }
+
+        final String event = sse.event();
+        if (event != null) {
+            appendField(sb, "event", event, true);
+        }
+
+        final String data = sse.data();
+        if (data != null) {
+            appendField(sb, "data", data, true);
+        }
+
+        final Duration retry = sse.retry();
+        if (retry != null) {
+            // Reconnection time, in milliseconds.
+            sb.append("retry:").append(retry.toMillis()).append(LINE_FEED);
+        }
+
+        return sb.length() == 0 ? "" : sb.append(LINE_FEED).toString();
+    }
+
+    private static void appendField(StringBuilder sb, String name, String value,
+                                    boolean emitFieldForEmptyValue) {
+        if (value.isEmpty()) {
+            if (emitFieldForEmptyValue) {
+                // Emit name only if the value is an empty string.
+                sb.append(name).append(LINE_FEED);
+            }
+        } else {
+            sb.append(name).append(':');
+
+            final String[] values = value.split("\n");
+            assert values.length > 0;
+            if (values.length == 1) {
+                sb.append(value);
+            } else {
+                final int len = values.length - 1;
+                for (int i = 0; i < len; i++) {
+                    sb.append(values[i]).append(LINE_FEED).append(name).append(':');
+                }
+                sb.append(values[len]);
+            }
+            sb.append(LINE_FEED);
+        }
     }
 
     @Override

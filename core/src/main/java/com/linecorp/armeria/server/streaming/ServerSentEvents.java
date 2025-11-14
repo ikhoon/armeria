@@ -18,7 +18,6 @@ package com.linecorp.armeria.server.streaming;
 import static com.linecorp.armeria.internal.server.ResponseConversionUtil.streamingFrom;
 import static java.util.Objects.requireNonNull;
 
-import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -70,10 +69,6 @@ public final class ServerSentEvents {
      */
     private static boolean warnedContentType;
 
-    /**
-     * A line feed character which marks the end of a field in Server-Sent Events.
-     */
-    private static final char LINE_FEED = '\n';
 
     /**
      * A default {@link ResponseHeaders} of Server-Sent Events.
@@ -339,68 +334,13 @@ public final class ServerSentEvents {
     }
 
     private static HttpData toHttpData(ServerSentEvent sse) {
-        final StringBuilder sb = new StringBuilder();
-
-        // Write a comment first because a user might want to explain his or her event at first line.
-        final String comment = sse.comment();
-        if (comment != null) {
-            appendField(sb, "", comment, false);
-        }
-
-        final String id = sse.id();
-        if (id != null) {
-            appendField(sb, "id", id, true);
-        }
-
-        final String event = sse.event();
-        if (event != null) {
-            appendField(sb, "event", event, true);
-        }
-
-        final String data = sse.data();
-        if (data != null) {
-            appendField(sb, "data", data, true);
-        }
-
-        final Duration retry = sse.retry();
-        if (retry != null) {
-            // Reconnection time, in milliseconds.
-            sb.append("retry:").append(retry.toMillis()).append(LINE_FEED);
-        }
-
-        return sb.length() == 0 ? HttpData.empty()
-                                : HttpData.ofUtf8(sb.append(LINE_FEED).toString());
+        return HttpData.ofUtf8(sse.toEventStreamString());
     }
 
     private static <T> HttpData toHttpData(
             Function<? super T, ? extends ServerSentEvent> converter, T content) {
         final ServerSentEvent sse = converter.apply(content);
         return sse == null ? HttpData.empty() : toHttpData(sse);
-    }
-
-    private static void appendField(StringBuilder sb, String name, String value,
-                                    boolean emitFieldForEmptyValue) {
-        if (value.isEmpty()) {
-            if (emitFieldForEmptyValue) {
-                // Emit name only if the value is an empty string.
-                sb.append(name).append(LINE_FEED);
-            }
-        } else {
-            sb.append(name).append(':');
-
-            final String[] values = value.split("\n");
-            assert values.length > 0;
-            if (values.length == 1) {
-                sb.append(value);
-            } else {
-                final int len = values.length - 1;
-                for (int i = 0; i < len; i++) {
-                    sb.append(values[i]).append(LINE_FEED).append(name).append(':');
-                }
-                sb.append(values[len]);
-            }
-            sb.append(LINE_FEED);
-        }
     }
 
     private ServerSentEvents() {}
