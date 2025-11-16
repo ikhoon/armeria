@@ -25,6 +25,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 import org.reactivestreams.Publisher;
 
@@ -165,6 +166,16 @@ public abstract class AbstractHttpRequestBuilder
     public AbstractHttpRequestBuilder headers(
             Iterable<? extends Entry<? extends CharSequence, String>> headers) {
         return (AbstractHttpRequestBuilder) super.headers(headers);
+    }
+
+    @Override
+    public AbstractHttpRequestBuilder headers(Consumer<HttpHeadersBuilder> customizer) {
+        return (AbstractHttpRequestBuilder) super.headers(customizer);
+    }
+
+    @Override
+    public AbstractHttpRequestBuilder trailer(CharSequence name, Object value) {
+        return (AbstractHttpRequestBuilder) super.trailer(name, value);
     }
 
     @Override

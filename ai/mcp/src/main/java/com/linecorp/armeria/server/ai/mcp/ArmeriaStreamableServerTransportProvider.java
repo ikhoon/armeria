@@ -85,7 +85,7 @@ public final class ArmeriaStreamableServerTransportProvider implements McpStream
     private static final Logger logger = LoggerFactory.getLogger(
             ArmeriaStreamableServerTransportProvider.class);
 
-    static final String MESSAGE_EVENT_TYPE = "message";
+    private static final String MESSAGE_EVENT_TYPE = "message";
 
     /**
      * Returns a new {@link ArmeriaStreamableServerTransportProvider} with default settings.

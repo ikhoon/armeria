@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Locale;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 import org.reactivestreams.Publisher;
 
@@ -235,6 +236,24 @@ public final class HttpResponseBuilder extends AbstractHttpMessageBuilder {
     @Override
     public HttpResponseBuilder headers(Iterable<? extends Entry<? extends CharSequence, String>> headers) {
         return (HttpResponseBuilder) super.headers(headers);
+    }
+
+    /**
+     * Adds headers to this response using the specified {@code customizer}. For example:
+     * <pre>{@code
+     * HttpResponse.builder()
+     *             .ok()
+     *             .content("Hello, Armeria")
+     *             .headers(headers -> {
+     *               headers.add("x-test-header", "foo");
+     *               headers.add("Server", "baz");
+     *             })
+     *             .build();
+     * }</pre>
+     */
+    @Override
+    public HttpResponseBuilder headers(Consumer<HttpHeadersBuilder> customizer) {
+        return (HttpResponseBuilder) super.headers(customizer);
     }
 
     @Override

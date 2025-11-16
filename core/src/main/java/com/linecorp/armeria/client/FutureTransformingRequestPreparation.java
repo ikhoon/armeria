@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.reactivestreams.Publisher;
@@ -34,6 +35,7 @@ import com.google.errorprone.annotations.FormatString;
 import com.linecorp.armeria.common.Cookie;
 import com.linecorp.armeria.common.ExchangeType;
 import com.linecorp.armeria.common.HttpData;
+import com.linecorp.armeria.common.HttpHeadersBuilder;
 import com.linecorp.armeria.common.HttpMethod;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
@@ -304,6 +306,12 @@ public final class FutureTransformingRequestPreparation<T>
     public FutureTransformingRequestPreparation<T> headers(
             Iterable<? extends Entry<? extends CharSequence, String>> headers) {
         delegate.headers(headers);
+        return this;
+    }
+
+    @Override
+    public FutureTransformingRequestPreparation<T> headers(Consumer<HttpHeadersBuilder> customizer) {
+        delegate.headers(customizer);
         return this;
     }
 

@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.reactivestreams.Publisher;
 
@@ -37,6 +38,7 @@ import com.linecorp.armeria.common.AbstractHttpRequestBuilder;
 import com.linecorp.armeria.common.Cookie;
 import com.linecorp.armeria.common.ExchangeType;
 import com.linecorp.armeria.common.HttpData;
+import com.linecorp.armeria.common.HttpHeadersBuilder;
 import com.linecorp.armeria.common.HttpMethod;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
@@ -529,6 +531,16 @@ public final class WebClientRequestPreparation
     }
 
     @Override
+    public WebClientRequestPreparation headers(Consumer<HttpHeadersBuilder> customizer) {
+        return (WebClientRequestPreparation) super.headers(customizer);
+    }
+
+    @Override
+    public WebClientRequestPreparation trailer(CharSequence name, Object value) {
+        return (WebClientRequestPreparation) super.trailer(name, value);
+    }
+
+    @Override
     public WebClientRequestPreparation trailers(
             Iterable<? extends Map.Entry<? extends CharSequence, String>> trailers) {
         return (WebClientRequestPreparation) super.trailers(trailers);
@@ -568,5 +580,15 @@ public final class WebClientRequestPreparation
     @Override
     public WebClientRequestPreparation cookies(Iterable<? extends Cookie> cookies) {
         return (WebClientRequestPreparation) super.cookies(cookies);
+    }
+
+    @Override
+    public WebClientRequestPreparation accept(MediaType... mediaTypes) {
+        return (WebClientRequestPreparation) super.accept(mediaTypes);
+    }
+
+    @Override
+    public WebClientRequestPreparation accept(Iterable<MediaType> mediaTypes) {
+        return (WebClientRequestPreparation) super.accept(mediaTypes);
     }
 }

@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import org.reactivestreams.Publisher;
 
@@ -33,6 +34,7 @@ import com.google.errorprone.annotations.FormatString;
 import com.linecorp.armeria.common.Cookie;
 import com.linecorp.armeria.common.ExchangeType;
 import com.linecorp.armeria.common.HttpData;
+import com.linecorp.armeria.common.HttpHeadersBuilder;
 import com.linecorp.armeria.common.HttpMethod;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
@@ -227,6 +229,12 @@ public final class RestClientPreparation implements RequestPreparationSetters {
     @Override
     public RestClientPreparation headers(Iterable<? extends Entry<? extends CharSequence, String>> headers) {
         delegate.headers(headers);
+        return this;
+    }
+
+    @Override
+    public RestClientPreparation headers(Consumer<HttpHeadersBuilder> customizer) {
+        delegate.headers(customizer);
         return this;
     }
 

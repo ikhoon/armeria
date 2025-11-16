@@ -18,6 +18,7 @@ package com.linecorp.armeria.common;
 
 import java.util.Locale;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 import org.reactivestreams.Publisher;
 
@@ -102,6 +103,11 @@ public interface HttpMessageSetters {
      */
     HttpMessageSetters headers(
             Iterable<? extends Entry<? extends CharSequence, String>> headers);
+
+    /**
+     * Customizes headers for this message with the specified {@code customizer}.
+     */
+    HttpMessageSetters headers(Consumer<HttpHeadersBuilder> customizer);
 
     /**
      * Adds an HTTP trailer for this message.

@@ -17,6 +17,7 @@
 package com.linecorp.armeria.common;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.reactivestreams.Publisher;
 
@@ -154,6 +155,11 @@ public final class HttpRequestBuilder extends AbstractHttpRequestBuilder {
     }
 
     @Override
+    public HttpRequestBuilder headers(Consumer<HttpHeadersBuilder> customizer) {
+        return (HttpRequestBuilder) super.headers(customizer);
+    }
+
+    @Override
     public HttpRequestBuilder trailer(CharSequence name, Object value) {
         return (HttpRequestBuilder) super.trailer(name, value);
     }
@@ -198,5 +204,15 @@ public final class HttpRequestBuilder extends AbstractHttpRequestBuilder {
     @Override
     public HttpRequestBuilder cookies(Iterable<? extends Cookie> cookies) {
         return (HttpRequestBuilder) super.cookies(cookies);
+    }
+
+    @Override
+    public HttpRequestBuilder accept(MediaType... mediaTypes) {
+        return (HttpRequestBuilder) super.accept(mediaTypes);
+    }
+
+    @Override
+    public HttpRequestBuilder accept(Iterable<MediaType> mediaTypes) {
+        return (HttpRequestBuilder) super.accept(mediaTypes);
     }
 }

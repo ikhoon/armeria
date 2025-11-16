@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.reactivestreams.Publisher;
@@ -38,6 +39,7 @@ import com.linecorp.armeria.common.AggregatedHttpResponse;
 import com.linecorp.armeria.common.Cookie;
 import com.linecorp.armeria.common.ExchangeType;
 import com.linecorp.armeria.common.HttpData;
+import com.linecorp.armeria.common.HttpHeadersBuilder;
 import com.linecorp.armeria.common.HttpMethod;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpStatus;
@@ -480,6 +482,12 @@ public final class BlockingWebClientRequestPreparation
     public BlockingWebClientRequestPreparation headers(
             Iterable<? extends Entry<? extends CharSequence, String>> headers) {
         delegate.headers(headers);
+        return this;
+    }
+
+    @Override
+    public BlockingWebClientRequestPreparation headers(Consumer<HttpHeadersBuilder> customizer) {
+        delegate.headers(customizer);
         return this;
     }
 

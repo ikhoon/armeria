@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 import org.reactivestreams.Publisher;
 
@@ -85,6 +86,13 @@ public abstract class AbstractHttpMessageBuilder implements HttpMessageSetters {
             Iterable<? extends Entry<? extends CharSequence, String>> headers) {
         requireNonNull(headers, "headers");
         headersBuilder().add(headers);
+        return this;
+    }
+
+    @Override
+    public AbstractHttpMessageBuilder headers(Consumer<HttpHeadersBuilder> customizer) {
+        requireNonNull(customizer, "customizer");
+        customizer.accept(headersBuilder());
         return this;
     }
 
