@@ -20,6 +20,7 @@ import static io.modelcontextprotocol.spec.McpSchema.deserializeJsonRpcMessage;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -30,6 +31,8 @@ import java.util.function.Function;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 import com.linecorp.armeria.client.BlockingWebClient;
 import com.linecorp.armeria.client.InvalidResponseHeadersException;
@@ -42,6 +45,7 @@ import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.common.SplitHttpResponse;
 import com.linecorp.armeria.common.annotation.Nullable;
+import com.linecorp.armeria.common.jsonrpc.JsonRpcMessage;
 import com.linecorp.armeria.common.sse.ServerSentEvent;
 import com.linecorp.armeria.common.stream.ByteStreamMessage;
 import com.linecorp.armeria.common.stream.StreamMessage;
@@ -54,7 +58,9 @@ import io.modelcontextprotocol.spec.DefaultMcpTransportSession;
 import io.modelcontextprotocol.spec.DefaultMcpTransportStream;
 import io.modelcontextprotocol.spec.McpClientTransport;
 import io.modelcontextprotocol.spec.McpError;
+import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCMessage;
+import io.modelcontextprotocol.spec.McpSchema.JSONRPCNotification;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import io.modelcontextprotocol.spec.McpTransportException;
@@ -201,21 +207,102 @@ public final class ArmeriaStreamableClientTransport implements McpClientTranspor
             // listen for messages.
             // If it doesn't, nothing actually happens here, that's just the way it is...
             final AtomicReference<Disposable> disposableRef = new AtomicReference<>();
-            final McpTransportSession<Disposable> transportSession = this.activeSession.get();
+            final McpTransportSession<Disposable> transportSession = activeSession.get();
 
-            BlockingWebClient.of().prepare()
-                                    .accept
-            Disposable connection = webClient.prepare()
-                                             .post(this.endpoint)
-                                             .accept(MediaType.JSON, MediaType.EVENT_STREAM)
-                                             .header(io.modelcontextprotocol.spec.HttpHeaders.PROTOCOL_VERSION,
-                                                     MCP_PROTOCOL_VERSION)
-                                             .headers(httpHeaders -> {
-                                                 transportSession.sessionId().ifPresent(id -> httpHeaders.add(
-                                                         io.modelcontextprotocol.spec.HttpHeaders.MCP_SESSION_ID,
-                                                         id));
-                                             })
-            return null;
+            final SplitHttpResponse response =
+                    webClient.prepare()
+                             .post(endpoint)
+                             .header(HttpHeaderNames.ACCEPT, MediaType.JSON)
+                             .header(HttpHeaderNames.ACCEPT, MediaType.EVENT_STREAM)
+                             .header(io.modelcontextprotocol.spec.HttpHeaders.PROTOCOL_VERSION,
+                                     MCP_PROTOCOL_VERSION)
+                             .headers(httpHeaders -> {
+                                 transportSession.sessionId().ifPresent(
+                                         id -> httpHeaders.add(
+                                                 io.modelcontextprotocol.spec.HttpHeaders.MCP_SESSION_ID,
+                                                 id));
+                             })
+                             .contentJson(message)
+                             .execute().split();
+            final CompletableFuture<Flux<JSONRPCResponse>> future = response.headers().thenApply(
+                    headers -> {
+                        if (transportSession
+                                .markInitialized(
+                                        headers.get(io.modelcontextprotocol.spec.HttpHeaders.MCP_SESSION_ID))) {
+                            // Once we have a session, we try to open an async stream for
+                            // the server to send notifications and requests out-of-band.
+                            reconnect(null).contextWrite(sink.contextView()).subscribe();
+                        }
+                        final String sessionRepresentation = sessionIdOrPlaceholder(transportSession);
+
+                        // The spec mentions only ACCEPTED, but the existing SDKs can return
+                        // 200 OK for notifications
+                        if (headers.status().isSuccess()) {
+                            final MediaType contentType = headers.contentType();
+                            final long contentLength = headers.contentLength();
+                            // Existing SDKs consume notifications with no response body nor
+                            // content type
+                            if (contentType == null || contentLength == 0) {
+                                logger.trace("Message was successfully sent via POST for session {}",
+                                             sessionRepresentation);
+                                // signal the caller that the message was successfully
+                                // delivered
+                                sink.success();
+                                // communicate to downstream there is no streamed data coming
+                                return Flux.<JSONRPCResponse>empty();
+                            } else {
+                                if (contentType.is(MediaType.EVENT_STREAM)) {
+                                    logger.debug("Established SSE stream via POST");
+                                    // communicate to caller that the message was delivered
+                                    sink.success();
+                                    // starting a stream
+                                    return newEventStream(response.body(), sessionRepresentation);
+                                } else if (contentType.isJson()) {
+                                    logger.trace("Received response to POST for session {}",
+                                                 sessionRepresentation);
+                                    // communicate to caller the message was delivered
+                                    sink.success();
+                                    return directResponseFlux(message, response.body());
+                                } else {
+                                    logger.warn("Unknown media type {} returned for POST in session {}",
+                                                contentType,
+                                                sessionRepresentation);
+                                    return Flux.error(new RuntimeException(
+                                            "Unknown media type returned: " + contentType));
+                                }
+                            }
+                        } else {
+                            if (isNotFound(headers) && !sessionRepresentation.equals(MISSING_SESSION_ID)) {
+                                return mcpSessionNotFoundError(sessionRepresentation);
+                            }
+                            return extractError(headers, response.body(), sessionRepresentation);
+                        }
+                    });
+            final Disposable connection =
+                    Mono.fromFuture(future).flux()
+                        .flatMap(Function.identity())
+                        .flatMap(jsonRpcMessage -> {
+                            return handler.get().apply(Mono.just(
+                                    jsonRpcMessage));
+                        })
+                        .onErrorComplete(t -> {
+                            // handle the error first
+                            handleException(t);
+                            // inform the caller of sendMessage
+                            sink.error(t);
+                            return true;
+                        })
+                        .doFinally(s -> {
+                            final Disposable ref = disposableRef.getAndSet(null);
+                            if (ref != null) {
+                                transportSession.removeConnection(ref);
+                            }
+                        })
+                        .contextWrite(sink.contextView())
+                        .subscribe();
+
+            disposableRef.set(connection);
+            transportSession.addConnection(connection);
         });
     }
 
@@ -256,10 +343,10 @@ public final class ArmeriaStreamableClientTransport implements McpClientTranspor
 
     private static McpTransportSession<Disposable> createClosedSession(
             McpTransportSession<Disposable> existingSession) {
-        String existingSessionId = Optional.ofNullable(existingSession)
-                                           .filter(session -> !(session instanceof ClosedMcpTransportSession<Disposable>))
-                                           .flatMap(McpTransportSession::sessionId)
-                                           .orElse(null);
+        final String existingSessionId = Optional.ofNullable(existingSession)
+                                                 .filter(session -> !(session instanceof ClosedMcpTransportSession<Disposable>))
+                                                 .flatMap(McpTransportSession::sessionId)
+                                                 .orElse(null);
         return new ClosedMcpTransportSession<>(existingSessionId);
     }
 
@@ -275,6 +362,15 @@ public final class ArmeriaStreamableClientTransport implements McpClientTranspor
         final StreamMessage<Tuple2<Optional<String>, Iterable<JSONRPCMessage>>> messages =
                 body.decode(ServerSentEvent.decoder()).map(this::parse);
         return Flux.from(sessionStream.consumeSseStream(messages));
+    }
+
+    private Flux<McpSchema.JSONRPCMessage> newEventStream(ByteStreamMessage body,
+                                                          String sessionRepresentation) {
+        final McpTransportStream<Disposable> sessionStream = new DefaultMcpTransportStream<>(resumableStreams,
+                                                                                             this::reconnect);
+        logger.trace("Sent POST and opened a stream ({}) for session {}", sessionStream.streamId(),
+                     sessionRepresentation);
+        return eventStream(sessionStream, body);
     }
 
     private Tuple2<Optional<String>, Iterable<JSONRPCMessage>> parse(ServerSentEvent event) {
@@ -306,6 +402,27 @@ public final class ArmeriaStreamableClientTransport implements McpClientTranspor
 
     private static String sessionIdOrPlaceholder(McpTransportSession<?> transportSession) {
         return transportSession.sessionId().orElse(MISSING_SESSION_ID);
+    }
+
+    private Flux<McpSchema.JSONRPCMessage> directResponseFlux(McpSchema.JSONRPCMessage sentMessage,
+                                                              ByteStreamMessage body) {
+        final CompletableFuture<Flux<JSONRPCMessage>> future = body.collectBytes().thenApply(bytes -> {
+            final String responseMessage = new String(bytes, StandardCharsets.UTF_8);
+            try {
+                if (sentMessage instanceof JSONRPCNotification) {
+                    logger.warn("Notification: {} received non-compliant response: {}", sentMessage,
+                                Utils.hasText(responseMessage) ? responseMessage : "[empty]");
+                    return Flux.empty();
+                } else {
+                    final JSONRPCMessage jsonRpcResponse = deserializeJsonRpcMessage(jsonMapper,
+                                                                                     responseMessage);
+                    return Flux.fromIterable(ImmutableList.of(jsonRpcResponse));
+                }
+            } catch (IOException e) {
+                return Flux.error(new McpTransportException(e));
+            }
+        });
+        return Mono.fromFuture(future).flux().flatMap(Function.identity());
     }
 
     private static Flux<JSONRPCMessage> mcpSessionNotFoundError(String sessionRepresentation) {
@@ -357,14 +474,14 @@ public final class ArmeriaStreamableClientTransport implements McpClientTranspor
     @Override
     public void setExceptionHandler(Consumer<Throwable> handler) {
         logger.debug("Exception handler registered");
-        this.exceptionHandler.set(handler);
+        exceptionHandler.set(handler);
     }
 
     @Override
     public Mono<Void> closeGracefully() {
         return Mono.defer(() -> {
             logger.debug("Graceful close triggered");
-            McpTransportSession<Disposable> currentSession = this.activeSession.getAndUpdate(
+            final McpTransportSession<Disposable> currentSession = activeSession.getAndUpdate(
                     ArmeriaStreamableClientTransport::createClosedSession);
             if (currentSession != null) {
                 return Mono.from(currentSession.closeGracefully());

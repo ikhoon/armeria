@@ -18,8 +18,6 @@ package com.linecorp.armeria.client;
 
 import java.time.Duration;
 
-import javax.print.attribute.standard.Media;
-
 import com.linecorp.armeria.common.HttpMessageSetters;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.PathAndQueryParamSetters;
@@ -40,6 +38,4 @@ public interface RequestPreparationSetters extends PathAndQueryParamSetters, Htt
      * and {@link #attr(AttributeKey, Object)}.
      */
     RequestPreparationSetters requestOptions(RequestOptions requestOptions);
-
-    RequestPreparationSetters accept(Media)
 }

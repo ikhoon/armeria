@@ -205,14 +205,4 @@ public final class HttpRequestBuilder extends AbstractHttpRequestBuilder {
     public HttpRequestBuilder cookies(Iterable<? extends Cookie> cookies) {
         return (HttpRequestBuilder) super.cookies(cookies);
     }
-
-    @Override
-    public HttpRequestBuilder accept(MediaType... mediaTypes) {
-        return (HttpRequestBuilder) super.accept(mediaTypes);
-    }
-
-    @Override
-    public HttpRequestBuilder accept(Iterable<MediaType> mediaTypes) {
-        return (HttpRequestBuilder) super.accept(mediaTypes);
-    }
 }

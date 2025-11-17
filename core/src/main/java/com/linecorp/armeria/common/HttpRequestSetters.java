@@ -16,8 +16,6 @@
 
 package com.linecorp.armeria.common;
 
-import static java.util.Objects.requireNonNull;
-
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,7 +24,6 @@ import java.util.function.Consumer;
 import org.reactivestreams.Publisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -242,23 +239,4 @@ public interface HttpRequestSetters extends RequestMethodSetters, PathAndQueryPa
      */
     @Override
     HttpRequestSetters cookies(Iterable<? extends Cookie> cookies);
-
-    /**
-     * Sets the {@code Accept} header for this request.
-     */
-    default HttpRequestSetters accept(MediaType... mediaTypes) {
-        requireNonNull(mediaTypes, "mediaTypes");
-        return accept(ImmutableList.copyOf(mediaTypes));
-    }
-
-    /**
-     * Sets the {@code Accept} headers for this request.
-     */
-    default HttpRequestSetters accept(Iterable<MediaType> mediaTypes) {
-        requireNonNull(mediaTypes, "mediaTypes");
-        for (MediaType mediaType : mediaTypes) {
-            header(HttpHeaderNames.ACCEPT, mediaType);
-        }
-        return this;
-    }
 }

@@ -581,14 +581,4 @@ public final class WebClientRequestPreparation
     public WebClientRequestPreparation cookies(Iterable<? extends Cookie> cookies) {
         return (WebClientRequestPreparation) super.cookies(cookies);
     }
-
-    @Override
-    public WebClientRequestPreparation accept(MediaType... mediaTypes) {
-        return (WebClientRequestPreparation) super.accept(mediaTypes);
-    }
-
-    @Override
-    public WebClientRequestPreparation accept(Iterable<MediaType> mediaTypes) {
-        return (WebClientRequestPreparation) super.accept(mediaTypes);
-    }
 }
