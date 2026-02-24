@@ -520,7 +520,7 @@ public final class THttpService extends DecoratingService<RpcRequest, RpcRespons
 
                 header = inProto.readMessageBegin();
             } catch (Exception e) {
-                logger.debug("{} Failed to decode a {} header:", ctx, serializationFormat, e);
+                logger.debug("{} Failed to decode a {} header: {}", ctx, serializationFormat, e.getMessage(), e);
 
                 final HttpStatus httpStatus;
                 String message;

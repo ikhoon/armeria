@@ -53,7 +53,7 @@ public final class PendingExceptionUtil {
     public static void setPendingException(Channel channel, Throwable cause) {
         final Throwable previousCause = channel.attr(PENDING_EXCEPTION).setIfAbsent(cause);
         if (previousCause != null) {
-            logger.warn("{} Unexpected suppressed exception:", channel, cause);
+            logger.warn("{} Unexpected suppressed exception: {}", channel, cause.getMessage(), cause);
         }
     }
 

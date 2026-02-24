@@ -70,7 +70,7 @@ public final class XdsBootstrapBuilder {
         @Override
         public void onUpdate(@Nullable Object snapshot, @Nullable Throwable t) {
             if (t != null) {
-                logger.warn("Error fetching resource e: ", t);
+                logger.warn("Error fetching resource e: {}", t.getMessage(), t);
             }
         }
     };

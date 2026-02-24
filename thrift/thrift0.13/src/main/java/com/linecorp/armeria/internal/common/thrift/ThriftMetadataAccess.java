@@ -51,7 +51,7 @@ public final class ThriftMetadataAccess {
                 preInitializeThriftClass = true;
             }
         } catch (Exception e) {
-            logger.debug("Unexpected exception while extracting options: ", e);
+            logger.debug("Unexpected exception while extracting options: {}", e.getMessage(), e);
             preInitializeThriftClass = true;
         }
     }
@@ -73,7 +73,7 @@ public final class ThriftMetadataAccess {
             } catch (ClassNotFoundException e) {
                 // Another exception will probably be raised in the actual getStructMetaDataMap so just
                 // logging for at this point.
-                logger.trace("Unexpected exception while initializing class {}: ", clazz, e);
+                logger.trace("Unexpected exception while initializing class {}: {}", clazz, e.getMessage(), e);
             }
         }
         return FieldMetaData.getStructMetaDataMap((Class<T>) clazz);

@@ -74,7 +74,7 @@ final class RefreshingTlsProvider implements TlsProvider {
                     }
                 }
             } catch (Throwable t) {
-                logger.warn("Failed to refresh a new TlsKeyPair:", t);
+                logger.warn("Failed to refresh a new TlsKeyPair: {}", t.getMessage(), t);
             }
         }, interval.toMillis(), interval.toMillis(), TimeUnit.MILLISECONDS);
     }

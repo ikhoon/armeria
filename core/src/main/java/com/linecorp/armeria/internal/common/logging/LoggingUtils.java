@@ -57,7 +57,7 @@ public final class LoggingUtils {
     private static void logException(RequestContext ctx,
                                      String requestOrResponse, Throwable cause) {
         try (SafeCloseable ignored = ctx.push()) {
-            logger.warn("{} Unexpected exception while logging {}: ", ctx, requestOrResponse, cause);
+            logger.warn("{} Unexpected exception while logging {}: {}", ctx, requestOrResponse, cause.getMessage(), cause);
         }
     }
 

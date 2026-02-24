@@ -249,7 +249,7 @@ public final class GrpcHealthCheckService extends HealthImplBase {
                     try {
                         updateListener.healthUpdated(healthChecker.isHealthy());
                     } catch (Throwable t) {
-                        logger.warn("Unexpected exception from HealthCheckUpdateListener.healthUpdated():", t);
+                        logger.warn("Unexpected exception from HealthCheckUpdateListener.healthUpdated(): {}", t.getMessage(), t);
                     }
                 });
             });

@@ -232,7 +232,7 @@ public final class JettyService implements HttpService {
         req.aggregate().handle((aReq, cause) -> {
             if (cause != null) {
                 cause = Exceptions.peel(cause);
-                logger.warn("{} Failed to aggregate a request:", ctx, cause);
+                logger.warn("{} Failed to aggregate a request: {}", ctx, cause.getMessage(), cause);
                 if (cause instanceof HttpStatusException || cause instanceof HttpResponseException) {
                     res.close(cause);
                 } else if (res.tryWrite(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR))) {
@@ -274,7 +274,7 @@ public final class JettyService implements HttpService {
                         try {
                             ctx.remoteAddress().getHostName();
                         } catch (Throwable t) {
-                            logger.warn("{} Failed to perform a reverse DNS lookup:", ctx, t);
+                            logger.warn("{} Failed to perform a reverse DNS lookup: {}", ctx, t.getMessage(), t);
                         }
                     }
 
@@ -282,7 +282,7 @@ public final class JettyService implements HttpService {
                     try {
                         httpChannel.handle();
                     } catch (Throwable t) {
-                        logger.warn("{} Failed to handle a request:", ctx, t);
+                        logger.warn("{} Failed to handle a request: {}", ctx, t.getMessage(), t);
                     }
                 });
             } catch (Throwable t) {

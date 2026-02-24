@@ -399,15 +399,16 @@ public final class SystemInfo {
             if (cause instanceof UnsupportedOperationException ||
                 cause instanceof SecurityException ||
                 cause instanceof IllegalAccessException) {
-                logger.debug("An access to {} not possible due to platform restriction:", method, cause);
+                logger.debug("An access to {} not possible due to platform restriction: {}",
+                             method, cause.getMessage(), cause);
                 return;
             }
 
-            final String msg = "Failed to retrieve the current PID from {}:";
+            final String msg = "Failed to retrieve the current PID from {}: {}";
             if (warn) {
-                logger.warn(msg, method, cause);
+                logger.warn(msg, method, cause.getMessage(), cause);
             } else {
-                logger.debug(msg, method, cause);
+                logger.debug(msg, method, cause.getMessage(), cause);
             }
         }
     }
@@ -466,7 +467,7 @@ public final class SystemInfo {
                     }
                 }
             } catch (IOException ex) {
-                logger.warn("Could not get a non-loopback IPv4 address:", ex);
+                logger.warn("Could not get a non-loopback IPv4 address: {}", ex.getMessage(), ex);
             }
 
             if (result != null) {

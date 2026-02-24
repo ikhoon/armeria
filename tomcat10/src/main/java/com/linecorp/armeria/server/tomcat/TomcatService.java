@@ -146,7 +146,7 @@ public abstract class TomcatService implements HttpService {
                              .findStatic(initClass, "init", MethodType.methodType(void.class))
                              .invoke();
             } catch (Throwable cause) {
-                logger.debug("Failed to initialize Tomcat ConfigFileLoader.source:", cause);
+                logger.debug("Failed to initialize Tomcat ConfigFileLoader.source: {}", cause.getMessage(), cause);
             }
         }
 
@@ -394,7 +394,7 @@ public abstract class TomcatService implements HttpService {
             try {
                 if (cause != null) {
                     cause = Exceptions.peel(cause);
-                    logger.warn("{} Failed to aggregate a request:", ctx, cause);
+                    logger.warn("{} Failed to aggregate a request: {}", ctx, cause.getMessage(), cause);
                     if (cause instanceof HttpStatusException || cause instanceof HttpResponseException) {
                         res.close(cause);
                     } else if (res.tryWrite(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR))) {

@@ -82,7 +82,7 @@ public final class ShutdownHooks {
                 try {
                     whenClosing.run();
                 } catch (Exception e) {
-                    logger.warn("Unexpected exception while running a shutdown callback:", e);
+                    logger.warn("Unexpected exception while running a shutdown callback: {}", e.getMessage(), e);
                 }
             }
             try {

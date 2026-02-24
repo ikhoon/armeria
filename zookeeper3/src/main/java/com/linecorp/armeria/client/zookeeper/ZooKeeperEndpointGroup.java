@@ -166,14 +166,14 @@ public final class ZooKeeperEndpointGroup extends DynamicEndpointGroup {
         try {
             pathChildrenCache.close();
         } catch (IOException e) {
-            logger.warn("Failed to close PathChildrenCache:", e);
+            logger.warn("Failed to close PathChildrenCache: {}", e.getMessage(), e);
         } finally {
             if (internalClient) {
                 closeCuratorFrameworkThreadFactory.newThread(() -> {
                     try {
                         client.close();
                     } catch (Throwable cause) {
-                        logger.warn("Failed to close CuratorFramework:", cause);
+                        logger.warn("Failed to close CuratorFramework: {}", cause.getMessage(), cause);
                     } finally {
                         future.complete(null);
                     }

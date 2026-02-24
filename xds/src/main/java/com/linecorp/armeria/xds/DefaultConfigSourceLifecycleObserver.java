@@ -90,7 +90,7 @@ final class DefaultConfigSourceLifecycleObserver implements ConfigSourceLifecycl
 
     @Override
     public void streamError(Throwable throwable) {
-        logger.debug("{} Stream closed: ", loggingIdentifier, throwable);
+        logger.debug("{} Stream closed: {}", loggingIdentifier, throwable.getMessage(), throwable);
         active = false;
         streamErrorCounter.increment();
     }

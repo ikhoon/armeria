@@ -250,7 +250,7 @@ final class WebSocketHttp1ClientChannelHandler extends ChannelDuplexHandler impl
         if (res != null) {
             res.close(cause);
         } else {
-            logger.warn("Unexpected exception:", cause);
+            logger.warn("Unexpected exception: {}", cause.getMessage(), cause);
         }
 
         ctx.close();
