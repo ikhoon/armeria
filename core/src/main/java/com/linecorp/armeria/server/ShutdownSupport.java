@@ -31,7 +31,7 @@ interface ShutdownSupport {
     static ShutdownSupport of(AccessLogWriter accessLogWriter) {
         requireNonNull(accessLogWriter, "accessLogWriter");
         return () -> accessLogWriter.shutdown().exceptionally(cause -> {
-            logger.warn("Failed to shutdown the {}: {}", accessLogWriter, cause.getMessage(), cause);
+            logger.warn("Failed to shutdown the {}:", accessLogWriter, cause);
             return null;
         });
     }
@@ -50,7 +50,7 @@ interface ShutdownSupport {
                     }
                 }
             } catch (Exception cause) {
-                logger.warn("Failed to shutdown the {}: {}", executor, cause.getMessage(), cause);
+                logger.warn("Failed to shutdown the {}:", executor, cause);
             } finally {
                 if (interrupted) {
                     Thread.currentThread().interrupt();

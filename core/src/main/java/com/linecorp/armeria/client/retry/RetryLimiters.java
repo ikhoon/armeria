@@ -38,7 +38,7 @@ final class RetryLimiters {
             try {
                 return delegate.shouldRetry(ctx);
             } catch (Exception e) {
-                logger.warn("Unexpected error when invoking RetryLimiter.shouldRetry: {}", e.getMessage(), e);
+                logger.warn("Unexpected error when invoking RetryLimiter.shouldRetry: ", e);
                 return false;
             }
         }
@@ -48,7 +48,7 @@ final class RetryLimiters {
             try {
                 delegate.handleDecision(ctx, decision);
             } catch (Exception e) {
-                logger.warn("Unexpected error when invoking RetryLimiter.handleDecision: {}", e.getMessage(), e);
+                logger.warn("Unexpected error when invoking RetryLimiter.handleDecision: ", e);
             }
         }
     }

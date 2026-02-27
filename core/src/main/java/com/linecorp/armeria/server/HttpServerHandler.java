@@ -822,7 +822,7 @@ final class HttpServerHandler extends ChannelInboundHandlerAdapter implements Ht
                     // NB: logBuilder.endResponse(cause) will be called by HttpResponseSubscriber below.
                 }
             } catch (Throwable t) {
-                logger.warn("Unexpected exception: {}", t.getMessage(), t);
+                logger.warn("Unexpected exception:", t);
             }
             handleRequestOrResponseComplete();
         }
@@ -896,7 +896,7 @@ final class HttpServerHandler extends ChannelInboundHandlerAdapter implements Ht
                     }
                 }
             } catch (Throwable t) {
-                logger.warn("Unexpected exception: {}", t.getMessage(), t);
+                logger.warn("Unexpected exception:", t);
             }
         }
 

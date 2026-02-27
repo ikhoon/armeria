@@ -130,7 +130,7 @@ final class AccessLogger {
                     appendEmptyField(message, addQuote);
                 }
             } catch (Throwable e) {
-                logger.debug("Caught an exception while formatting an access log: {}", e.getMessage(), e);
+                logger.debug("Caught an exception while formatting an access log:", e);
                 appendEmptyField(message, addQuote);
             }
         }

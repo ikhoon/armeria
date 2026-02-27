@@ -206,7 +206,7 @@ public final class DocService extends SimpleDecoratingHttpService {
                 ThreadFactories.newThreadFactory("docservice-loader", true));
         vfs().specificationLoader.updateServices(services, cfg.route(), executorService).handle((res, e) -> {
             if (e != null) {
-                logger.warn("Failed to load specifications completely: {}", e.getMessage(), e);
+                logger.warn("Failed to load specifications completely: ", e);
             }
             executorService.shutdown();
             return null;
@@ -358,7 +358,7 @@ public final class DocService extends SimpleDecoratingHttpService {
                                                      .writeValueAsBytes(jsonSpec);
                     return toFile(content, MediaType.JSON_UTF_8);
                 } catch (JsonProcessingException e) {
-                    logger.warn("Failed to generate JSON schemas: {}", e.getMessage(), e);
+                    logger.warn("Failed to generate JSON schemas:", e);
                     return toFile("[]".getBytes(), MediaType.JSON_UTF_8);
                 }
             }));

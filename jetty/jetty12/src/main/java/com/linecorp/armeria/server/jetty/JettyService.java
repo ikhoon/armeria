@@ -213,7 +213,7 @@ public final class JettyService implements HttpService {
         req.aggregate().handle((aReq, cause) -> {
             if (cause != null) {
                 cause = Exceptions.peel(cause);
-                logger.warn("{} Failed to aggregate a request: {}", ctx, cause.getMessage(), cause);
+                logger.warn("{} Failed to aggregate a request:", ctx, cause);
                 if (cause instanceof HttpStatusException || cause instanceof HttpResponseException) {
                     res.close(cause);
                 } else if (res.tryWrite(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR))) {
@@ -256,7 +256,7 @@ public final class JettyService implements HttpService {
                     try {
                         handler.run();
                     } catch (Throwable t) {
-                        logger.warn("{} Failed to handle a request: {}", ctx, t.getMessage(), t);
+                        logger.warn("{} Failed to handle a request:", ctx, t);
                     }
                 });
             } catch (Throwable t) {

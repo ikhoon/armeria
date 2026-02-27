@@ -339,7 +339,7 @@ public final class SurroundingPublisher<T> implements StreamMessage<T> {
                 tailFuture = finalizer.apply(cause);
             } catch (Throwable ex) {
                 if (cause != null) {
-                    logger.warn("Unexpected exception from finalizer: {}", ex.getMessage(), ex);
+                    logger.warn("Unexpected exception from finalizer:", ex);
                     close0(cause);
                 } else {
                     close0(ex);

@@ -116,7 +116,7 @@ public abstract class GracefulConnectionShutdownHandler {
         try {
             onDrainEnd(ctx);
         } catch (Exception e) {
-            logger.warn("{} Unexpected exception: {}", ctx.channel(), e.getMessage(), e);
+            logger.warn("{} Unexpected exception:", ctx.channel(), e);
         }
     }
 

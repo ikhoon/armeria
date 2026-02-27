@@ -307,7 +307,7 @@ final class Http1ResponseDecoder extends AbstractHttpResponseDecoder implements 
         if (res != null) {
             res.close(cause);
         } else {
-            logger.warn("Unexpected exception: {}", cause.getMessage(), cause);
+            logger.warn("Unexpected exception:", cause);
         }
 
         ctx.close();

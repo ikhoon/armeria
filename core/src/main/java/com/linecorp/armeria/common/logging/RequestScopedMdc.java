@@ -149,7 +149,7 @@ public final class RequestScopedMdc {
                 logger.debug("Using MDCAdapter.getPropertyMap()");
             } catch (Throwable t) {
                 oldAdapterGetPropertyMap = null;
-                logger.debug("getPropertyMap() is not available: {}", t.getMessage(), t);
+                logger.debug("getPropertyMap() is not available:", t);
             }
         }
         delegateGetPropertyMap = oldAdapterGetPropertyMap;

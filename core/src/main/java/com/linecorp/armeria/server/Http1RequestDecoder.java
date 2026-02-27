@@ -346,7 +346,7 @@ final class Http1RequestDecoder extends ChannelDuplexHandler {
                 req.close(HttpStatusException.of(HttpStatus.INTERNAL_SERVER_ERROR, t));
             } else {
                 fail(id, null, HttpStatus.INTERNAL_SERVER_ERROR, null, t);
-                logger.warn("Unexpected exception: {}", t.getMessage(), t);
+                logger.warn("Unexpected exception:", t);
             }
         } finally {
             ReferenceCountUtil.release(msg);

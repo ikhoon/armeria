@@ -41,7 +41,7 @@ public final class CompletionActions {
      */
     @Nullable
     public static <T> T log(Throwable cause) {
-        logger.warn("Unexpected exception from a completion action: {}", cause.getMessage(), cause);
+        logger.warn("Unexpected exception from a completion action:", cause);
         return null;
     }
 

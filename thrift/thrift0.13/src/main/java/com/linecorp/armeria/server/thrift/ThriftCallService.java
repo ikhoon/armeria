@@ -226,10 +226,10 @@ public final class ThriftCallService implements RpcService {
 
     private static void logOneWayFunctionFailure(@Nullable RequestContext ctx, Throwable cause) {
         if (ctx != null) {
-            logger.warn("{} Unexpected exception from a one-way function: {}", ctx, cause.getMessage(), cause);
+            logger.warn("{} Unexpected exception from a one-way function:", ctx, cause);
         } else {
             // Should never reach here, but for completeness.
-            logger.warn("Unexpected exception from a one-way function: {}", cause.getMessage(), cause);
+            logger.warn("Unexpected exception from a one-way function:", cause);
         }
     }
 }

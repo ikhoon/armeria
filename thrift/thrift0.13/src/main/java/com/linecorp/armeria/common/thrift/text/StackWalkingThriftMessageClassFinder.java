@@ -100,7 +100,7 @@ final class StackWalkingThriftMessageClassFinder extends AbstractThriftMessageCl
             };
         } catch (Throwable throwable) {
             // StackWalker instantiate without option
-            logger.warn("Falling back to StackWalker without option: {}", throwable.getMessage(), throwable);
+            logger.warn("Falling back to StackWalker without option:", throwable);
             final MethodHandle getInstanceMH =
                     lookup.findStatic(stackWalkerClass,
                                       "getInstance",

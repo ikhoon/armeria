@@ -215,9 +215,9 @@ public final class Exceptions {
      * }</pre>
      *
      * @return This method never returns because it always throws an exception. However, combined with an
-     * arbitrary return clause, you can terminate any non-void function with a single statement.
-     * e.g. {@code return Exceptions.throwUnsafely(...);} vs.
-     * {@code Exceptions.throwUnsafely(...); return null;}
+     *         arbitrary return clause, you can terminate any non-void function with a single statement.
+     *         e.g. {@code return Exceptions.throwUnsafely(...);} vs.
+     *              {@code Exceptions.throwUnsafely(...); return null;}
      */
     @SuppressWarnings({ "ReturnOfNull", "NullAway" })
     public static <T> T throwUnsafely(Throwable cause) {
@@ -242,9 +242,8 @@ public final class Exceptions {
      * rethrow the error.
      *
      * @param t the {@code Throwable} to test and perhaps throw
-     *
      * @see <a href="https://github.com/ReactiveX/RxJava/issues/748#issuecomment-32471495">
-     * RxJava: StackOverflowError is swallowed (Issue #748)</a>
+     *     RxJava: StackOverflowError is swallowed (Issue #748)</a>
      */
     public static void throwIfFatal(Throwable t) {
         requireNonNull(t, "t");

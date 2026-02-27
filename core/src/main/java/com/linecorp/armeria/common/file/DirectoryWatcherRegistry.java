@@ -102,7 +102,7 @@ final class DirectoryWatcherRegistry implements SafeCloseable {
             } catch (InterruptedException e) {
                 // ignore
             } catch (Exception e) {
-                logger.warn("Unexpected exception: {}", e.getMessage(), e);
+                logger.warn("Unexpected exception: ", e);
             }
         }
     }
@@ -117,7 +117,7 @@ final class DirectoryWatcherRegistry implements SafeCloseable {
             } catch (InterruptedException e) {
                 // ignore
             } catch (Exception e) {
-                logger.warn("Unexpected exception: {}", e.getMessage(), e);
+                logger.warn("Unexpected exception: ", e);
             }
         }
     }
