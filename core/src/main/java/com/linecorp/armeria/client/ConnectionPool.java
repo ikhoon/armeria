@@ -19,17 +19,21 @@ package com.linecorp.armeria.client;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.annotation.UnstableApi;
 import com.linecorp.armeria.common.util.SafeCloseable;
 
 /**
- * A pool of {@link Connection}s for a specific endpoint and protocol combination.
+ * A pool of {@link Connection}s for a specific endpoint.
  * Each pool manages connections to a single destination, identified by a combination of
- * {@link Endpoint}, proxy configuration, TLS settings, and {@link SessionProtocol}.
+ * {@link Endpoint}, proxy configuration, and TLS settings.
+ *
+ * <p>A single pool may contain connections with different protocols (e.g., HTTP/1 and HTTP/2).
+ * The protocol is determined during connection establishment and is a property of each
+ * individual {@link Connection}.
  *
  * <p>The pool delegates connection selection logic to a {@link ConnectionAcquisitionStrategy},
- * which can be customized via {@link ConnectionPoolBuilder#acquisitionStrategy(ConnectionAcquisitionStrategy)}.
+ * which can be customized via {@link ConnectionPoolBuilder#http1AcquisitionStrategy(ConnectionAcquisitionStrategy)}
+ * and {@link ConnectionPoolBuilder#http2AcquisitionStrategy(ConnectionAcquisitionStrategy)}.
  *
  * <h2>State query methods</h2>
  * <p>This interface exposes read-only state that {@link ConnectionAcquisitionStrategy} implementations
@@ -46,7 +50,7 @@ import com.linecorp.armeria.common.util.SafeCloseable;
  * <pre>{@code
  * ConnectionPool pool = ConnectionPool.builder()
  *     .maxNumConnections(50)
- *     .acquisitionStrategy(ConnectionAcquisitionStrategy.ofDefault())
+ *     .http2AcquisitionStrategy(myHttp2Strategy)
  *     .build();
  * }</pre>
  *
@@ -99,13 +103,6 @@ public interface ConnectionPool extends SafeCloseable {
      * when deciding whether to create a new one.
      */
     int pendingConnectionCount();
-
-    /**
-     * Returns the {@link SessionProtocol} that this pool serves.
-     * This is always an explicit protocol (one of {@link SessionProtocol#H1},
-     * {@link SessionProtocol#H1C}, {@link SessionProtocol#H2}, {@link SessionProtocol#H2C}).
-     */
-    SessionProtocol protocol();
 
     // --- Operations ---
 

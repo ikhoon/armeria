@@ -29,11 +29,24 @@ import com.linecorp.armeria.common.annotation.UnstableApi;
  * Options that are not explicitly set will inherit the defaults from
  * the {@link ClientFactory} configuration.
  *
+ * <h2>Strategy configuration</h2>
+ * <p>Since a single pool may contain both HTTP/1 and HTTP/2 connections
+ * (protocol is determined at connection time, not pool creation time),
+ * separate strategies can be set for each protocol:
+ *
+ * <ul>
+ *   <li>{@link #http1AcquisitionStrategy(ConnectionAcquisitionStrategy)} for HTTP/1 connections</li>
+ *   <li>{@link #http2AcquisitionStrategy(ConnectionAcquisitionStrategy)} for HTTP/2 connections</li>
+ * </ul>
+ *
+ * <p>If not set, {@link ConnectionAcquisitionStrategy#ofDefault()} is used for both.
+ *
  * <h2>Example</h2>
  * <pre>{@code
  * ConnectionPool pool = ConnectionPool.builder()
  *     .maxNumConnections(50)
- *     .acquisitionStrategy(ConnectionAcquisitionStrategy.ofDefault())
+ *     .http1AcquisitionStrategy(myHttp1Strategy)
+ *     .http2AcquisitionStrategy(myHttp2Strategy)
  *     .connectionPoolListener(ConnectionPoolListener.logging())
  *     .build();
  * }</pre>
@@ -48,7 +61,9 @@ public final class ConnectionPoolBuilder {
 
     private int maxNumConnections = DEFAULT_MAX_NUM_CONNECTIONS;
     @Nullable
-    private ConnectionAcquisitionStrategy acquisitionStrategy;
+    private ConnectionAcquisitionStrategy http1AcquisitionStrategy;
+    @Nullable
+    private ConnectionAcquisitionStrategy http2AcquisitionStrategy;
     private long idleTimeoutMillis = -1;
     private long maxConnectionAgeMillis = -1;
     @Nullable
@@ -59,7 +74,7 @@ public final class ConnectionPoolBuilder {
     /**
      * Sets the maximum number of connections this pool is allowed to maintain.
      * If the pool reaches this limit and no connections are available, the
-     * {@link ConnectionAcquisitionStrategy} may return {@link AcquisitionDecision#wait()}.
+     * {@link ConnectionAcquisitionStrategy} may return {@link AcquisitionDecision#pendingWait()}.
      *
      * <p>The default is {@link Integer#MAX_VALUE} (no limit).
      *
@@ -74,15 +89,32 @@ public final class ConnectionPoolBuilder {
     }
 
     /**
-     * Sets the {@link ConnectionAcquisitionStrategy} that determines how connections are
-     * selected from the pool. If not set, {@link ConnectionAcquisitionStrategy#ofDefault()} is used.
+     * Sets the {@link ConnectionAcquisitionStrategy} for HTTP/1 connections.
+     * This strategy is only consulted for HTTP/1 and HTTP/1C connections.
      *
-     * @param acquisitionStrategy the strategy to use
-     * @see ConnectionAcquisitionStrategy#ofDefault()
-     * @see ConnectionAcquisitionStrategy#fromLoadBalancer(com.linecorp.armeria.common.loadbalancer.LoadBalancer)
+     * <p>If not set, {@link ConnectionAcquisitionStrategy#ofDefault()} is used.
+     *
+     * @param http1AcquisitionStrategy the strategy to use for HTTP/1 connections
      */
-    public ConnectionPoolBuilder acquisitionStrategy(ConnectionAcquisitionStrategy acquisitionStrategy) {
-        this.acquisitionStrategy = requireNonNull(acquisitionStrategy, "acquisitionStrategy");
+    public ConnectionPoolBuilder http1AcquisitionStrategy(
+            ConnectionAcquisitionStrategy http1AcquisitionStrategy) {
+        this.http1AcquisitionStrategy =
+                requireNonNull(http1AcquisitionStrategy, "http1AcquisitionStrategy");
+        return this;
+    }
+
+    /**
+     * Sets the {@link ConnectionAcquisitionStrategy} for HTTP/2 connections.
+     * This strategy is only consulted for HTTP/2 and HTTP/2C connections.
+     *
+     * <p>If not set, {@link ConnectionAcquisitionStrategy#ofDefault()} is used.
+     *
+     * @param http2AcquisitionStrategy the strategy to use for HTTP/2 connections
+     */
+    public ConnectionPoolBuilder http2AcquisitionStrategy(
+            ConnectionAcquisitionStrategy http2AcquisitionStrategy) {
+        this.http2AcquisitionStrategy =
+                requireNonNull(http2AcquisitionStrategy, "http2AcquisitionStrategy");
         return this;
     }
 
@@ -159,9 +191,33 @@ public final class ConnectionPoolBuilder {
         return maxNumConnections;
     }
 
+    /**
+     * Resolves the effective strategy. Always wraps the per-protocol strategies in a
+     * dispatching strategy, using the default for any protocol not explicitly set.
+     */
+    ConnectionAcquisitionStrategy resolveStrategy() {
+        final ConnectionAcquisitionStrategy defaultStrategy =
+                ConnectionAcquisitionStrategy.ofDefault();
+        final ConnectionAcquisitionStrategy h1 =
+                http1AcquisitionStrategy != null ? http1AcquisitionStrategy : defaultStrategy;
+        final ConnectionAcquisitionStrategy h2 =
+                http2AcquisitionStrategy != null ? http2AcquisitionStrategy : defaultStrategy;
+
+        if (h1 == defaultStrategy && h2 == defaultStrategy) {
+            // Both are default, no need for dispatching overhead.
+            return defaultStrategy;
+        }
+        return new ProtocolDispatchingStrategy(h1, h2, defaultStrategy);
+    }
+
     @Nullable
-    ConnectionAcquisitionStrategy acquisitionStrategy() {
-        return acquisitionStrategy;
+    ConnectionAcquisitionStrategy http1AcquisitionStrategy() {
+        return http1AcquisitionStrategy;
+    }
+
+    @Nullable
+    ConnectionAcquisitionStrategy http2AcquisitionStrategy() {
+        return http2AcquisitionStrategy;
     }
 
     long idleTimeoutMillis() {

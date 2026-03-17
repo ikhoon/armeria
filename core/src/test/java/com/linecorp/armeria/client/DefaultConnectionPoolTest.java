@@ -39,7 +39,6 @@ class DefaultConnectionPoolTest {
     @BeforeEach
     void setUp() {
         pool = new DefaultConnectionPool(
-                SessionProtocol.H2,
                 3, // maxNumConnections
                 ConnectionAcquisitionStrategy.ofDefault(),
                 null // no listener
@@ -71,7 +70,6 @@ class DefaultConnectionPoolTest {
         assertThat(pool.availableConnections()).isEmpty();
         assertThat(pool.maxNumConnections()).isEqualTo(3);
         assertThat(pool.pendingConnectionCount()).isZero();
-        assertThat(pool.protocol()).isEqualTo(SessionProtocol.H2);
     }
 
     @Test
@@ -98,8 +96,6 @@ class DefaultConnectionPoolTest {
         final Connection conn = newH2Connection();
         pool.addConnection(conn);
 
-        // First request should not have created pending since we just manually added
-        // Let's directly test by acquiring
         final CompletableFuture<Connection> future = pool.acquire(newContext());
 
         assertThat(future).isDone();
@@ -153,16 +149,8 @@ class DefaultConnectionPoolTest {
 
     @Test
     void releaseNotifiesWaiters() {
-        final Connection conn = newH1Connection();
-        pool.addConnection(conn);
-        conn.incrementActiveRequests();
-
-        // Pool has 1 connection at capacity, at max 3 connections though.
-        // With only 1 connection and max 3, strategy should create new.
-        // But let's simulate full pool scenario:
         final DefaultConnectionPool fullPool = new DefaultConnectionPool(
-                SessionProtocol.H1, 1,
-                ConnectionAcquisitionStrategy.ofDefault(), null);
+                1, ConnectionAcquisitionStrategy.ofDefault(), null);
         final Connection c = newH1Connection();
         fullPool.addConnection(c);
         c.incrementActiveRequests();
@@ -231,10 +219,9 @@ class DefaultConnectionPoolTest {
 
     @Test
     void h2Multiplexing() {
-        // H2 pool with max 1 connection but high concurrency
+        // Pool with max 1 connection but high concurrency (H2 multiplexing)
         final DefaultConnectionPool h2Pool = new DefaultConnectionPool(
-                SessionProtocol.H2, 1,
-                ConnectionAcquisitionStrategy.ofDefault(), null);
+                1, ConnectionAcquisitionStrategy.ofDefault(), null);
 
         final Connection conn = new Connection(new EmbeddedChannel(), SessionProtocol.H2, 100);
         h2Pool.addConnection(conn);
@@ -263,7 +250,7 @@ class DefaultConnectionPoolTest {
         };
 
         final DefaultConnectionPool customPool = new DefaultConnectionPool(
-                SessionProtocol.H2, 2, alwaysNew, null);
+                2, alwaysNew, null);
 
         final Connection conn1 = newH2Connection();
         customPool.addConnection(conn1);
@@ -280,5 +267,26 @@ class DefaultConnectionPoolTest {
         assertThat(future.join()).isSameAs(conn2);
 
         customPool.close();
+    }
+
+    @Test
+    void mixedProtocolConnections() {
+        // A single pool can contain both H1 and H2 connections
+        final Connection h1Conn = newH1Connection();
+        final Connection h2Conn = newH2Connection();
+        pool.addConnection(h1Conn);
+        pool.addConnection(h2Conn);
+
+        assertThat(pool.numConnections()).isEqualTo(2);
+        assertThat(pool.connections()).containsExactlyInAnyOrder(h1Conn, h2Conn);
+
+        // H2 connection has more capacity, so it should be available
+        h1Conn.incrementActiveRequests(); // H1 is now full
+        assertThat(pool.availableConnections()).containsExactly(h2Conn);
+
+        // Acquire should pick the available H2 connection
+        final CompletableFuture<Connection> future = pool.acquire(newContext());
+        assertThat(future).isDone();
+        assertThat(future.join()).isSameAs(h2Conn);
     }
 }

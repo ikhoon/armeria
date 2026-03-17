@@ -16,21 +16,19 @@
 
 package com.linecorp.armeria.client;
 
-import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.annotation.UnstableApi;
 
 /**
- * A factory that creates {@link ConnectionPool} instances for each unique combination of
- * endpoint, proxy configuration, TLS settings, and {@link SessionProtocol}.
+ * A factory that customizes {@link ConnectionPool} configuration for each unique endpoint.
  *
  * <p>This is the primary extension point for per-endpoint pool customization.
  * Users can implement this interface to provide different pool configurations
- * depending on the target endpoint and protocol.
+ * depending on the target endpoint.
  *
  * <h2>Example: Per-endpoint maxNumConnections</h2>
  * <pre>{@code
  * ClientFactory factory = ClientFactory.builder()
- *     .connectionPoolFactory((poolKey, protocol, builder) -> {
+ *     .connectionPoolFactory((poolKey, builder) -> {
  *         if (poolKey.endpoint().host().equals("critical-service")) {
  *             builder.maxNumConnections(10);
  *         }
@@ -38,15 +36,12 @@ import com.linecorp.armeria.common.annotation.UnstableApi;
  *     .build();
  * }</pre>
  *
- * <h2>Example: Custom strategy per endpoint</h2>
+ * <h2>Example: Custom strategies per protocol</h2>
  * <pre>{@code
  * ClientFactory factory = ClientFactory.builder()
- *     .connectionPoolFactory((poolKey, protocol, builder) -> {
- *         if (protocol.isMultiplex()) {
- *             builder.acquisitionStrategy(myHttp2Strategy);
- *         } else {
- *             builder.acquisitionStrategy(myHttp1Strategy);
- *         }
+ *     .connectionPoolFactory((poolKey, builder) -> {
+ *         builder.http1AcquisitionStrategy(myHttp1Strategy)
+ *                .http2AcquisitionStrategy(myHttp2Strategy);
  *     })
  *     .build();
  * }</pre>
@@ -63,24 +58,22 @@ public interface ConnectionPoolFactory {
      * configuration from the {@link ClientFactory}.
      */
     static ConnectionPoolFactory ofDefault() {
-        return (poolKey, protocol, builder) -> {
+        return (poolKey, builder) -> {
             // No customization; use defaults from ClientFactory.
         };
     }
 
     /**
-     * Customizes a {@link ConnectionPoolBuilder} for the given pool key and protocol.
+     * Customizes a {@link ConnectionPoolBuilder} for the given pool key.
      * The builder is pre-initialized with the defaults from the {@link ClientFactory} configuration.
      * Implementations can selectively override settings by calling methods on the builder.
      *
-     * <p>A pool is created per unique combination of {@code poolKey} and {@code protocol}.
-     * The {@code protocol} is always an explicit protocol (one of {@link SessionProtocol#H1},
-     * {@link SessionProtocol#H1C}, {@link SessionProtocol#H2}, {@link SessionProtocol#H2C}).
+     * <p>A pool is created per unique {@code poolKey}, which represents a combination of
+     * endpoint, proxy configuration, TLS settings, and local address.
      *
-     * @param poolKey  the key identifying the endpoint, proxy configuration, TLS settings,
-     *                 and local address
-     * @param protocol the explicit {@link SessionProtocol} for this pool
-     * @param builder  the {@link ConnectionPoolBuilder} to customize
+     * @param poolKey the key identifying the endpoint, proxy configuration, TLS settings,
+     *                and local address
+     * @param builder the {@link ConnectionPoolBuilder} to customize
      */
-    void customize(PoolKey poolKey, SessionProtocol protocol, ConnectionPoolBuilder builder);
+    void customize(PoolKey poolKey, ConnectionPoolBuilder builder);
 }

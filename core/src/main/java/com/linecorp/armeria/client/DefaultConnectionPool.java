@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
-import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.util.UnmodifiableFuture;
 import com.linecorp.armeria.internal.common.util.ReentrantShortLock;
@@ -49,7 +48,6 @@ final class DefaultConnectionPool implements ConnectionPool {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultConnectionPool.class);
 
-    private final SessionProtocol protocol;
     private final int maxNumConnections;
     private final ConnectionAcquisitionStrategy strategy;
     @Nullable
@@ -61,11 +59,9 @@ final class DefaultConnectionPool implements ConnectionPool {
     private int pendingConnectionCount;
     private boolean closed;
 
-    DefaultConnectionPool(SessionProtocol protocol,
-                          int maxNumConnections,
+    DefaultConnectionPool(int maxNumConnections,
                           ConnectionAcquisitionStrategy strategy,
                           @Nullable ConnectionPoolListener listener) {
-        this.protocol = protocol;
         this.maxNumConnections = maxNumConnections;
         this.strategy = strategy;
         this.listener = listener;
@@ -123,11 +119,6 @@ final class DefaultConnectionPool implements ConnectionPool {
         } finally {
             lock.unlock();
         }
-    }
-
-    @Override
-    public SessionProtocol protocol() {
-        return protocol;
     }
 
     // --- Operations ---
@@ -342,8 +333,7 @@ final class DefaultConnectionPool implements ConnectionPool {
         lock.lock();
         try {
             return "DefaultConnectionPool{" +
-                   "protocol=" + protocol +
-                   ", connections=" + connections.size() +
+                   "connections=" + connections.size() +
                    ", maxNumConnections=" + maxNumConnections +
                    ", pendingConnections=" + pendingConnectionCount +
                    ", waitQueue=" + waitQueue.size() +

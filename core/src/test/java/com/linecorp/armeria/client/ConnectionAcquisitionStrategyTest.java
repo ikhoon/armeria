@@ -61,7 +61,7 @@ class ConnectionAcquisitionStrategyTest {
         // conn2 has 0 active requests
 
         final StubConnectionPool pool = new StubConnectionPool(
-                SessionProtocol.H2, 10, com.google.common.collect.ImmutableList.of(conn1, conn2));
+                10, com.google.common.collect.ImmutableList.of(conn1, conn2));
 
         final AcquisitionDecision decision = strategy.acquire(newContext(), pool);
         assertThat(decision.type()).isEqualTo(Type.USE_EXISTING);
@@ -73,7 +73,7 @@ class ConnectionAcquisitionStrategyTest {
         final ConnectionAcquisitionStrategy strategy = ConnectionAcquisitionStrategy.ofDefault();
 
         final StubConnectionPool pool = new StubConnectionPool(
-                SessionProtocol.H2, 10, Collections.emptyList());
+                10, Collections.emptyList());
 
         final AcquisitionDecision decision = strategy.acquire(newContext(), pool);
         assertThat(decision.type()).isEqualTo(Type.CREATE_NEW);
@@ -87,7 +87,7 @@ class ConnectionAcquisitionStrategyTest {
         conn.incrementActiveRequests(); // H1 is now full
 
         final StubConnectionPool pool = new StubConnectionPool(
-                SessionProtocol.H1, 1, com.google.common.collect.ImmutableList.of(conn));
+                1, com.google.common.collect.ImmutableList.of(conn));
 
         final AcquisitionDecision decision = strategy.acquire(newContext(), pool);
         assertThat(decision.type()).isEqualTo(Type.WAIT);
@@ -104,7 +104,7 @@ class ConnectionAcquisitionStrategyTest {
         // idle has 0 active requests
 
         final StubConnectionPool pool = new StubConnectionPool(
-                SessionProtocol.H1, 5, com.google.common.collect.ImmutableList.of(busy, idle));
+                5, com.google.common.collect.ImmutableList.of(busy, idle));
 
         final AcquisitionDecision decision = strategy.acquire(newContext(), pool);
         assertThat(decision.type()).isEqualTo(Type.USE_EXISTING);
@@ -117,7 +117,7 @@ class ConnectionAcquisitionStrategyTest {
 
         // Pool with max 2 connections, 1 existing, 1 pending
         final StubConnectionPool pool = new StubConnectionPool(
-                SessionProtocol.H2, 2, Collections.emptyList());
+                2, Collections.emptyList());
         pool.setPendingConnectionCount(1);
         pool.setNumConnections(1);
 
@@ -143,7 +143,7 @@ class ConnectionAcquisitionStrategyTest {
                 ConnectionAcquisitionStrategy.fromLoadBalancer(lb);
 
         final StubConnectionPool pool = new StubConnectionPool(
-                SessionProtocol.H2, 10, com.google.common.collect.ImmutableList.of(conn));
+                10, com.google.common.collect.ImmutableList.of(conn));
 
         final AcquisitionDecision decision = strategy.acquire(newContext(), pool);
         assertThat(decision.type()).isEqualTo(Type.USE_EXISTING);
@@ -164,7 +164,7 @@ class ConnectionAcquisitionStrategyTest {
                 ConnectionAcquisitionStrategy.fromLoadBalancer(lb);
 
         final StubConnectionPool pool = new StubConnectionPool(
-                SessionProtocol.H2, 10, Collections.emptyList());
+                10, Collections.emptyList());
 
         final AcquisitionDecision decision = strategy.acquire(newContext(), pool);
         assertThat(decision.type()).isEqualTo(Type.CREATE_NEW);
@@ -184,7 +184,7 @@ class ConnectionAcquisitionStrategyTest {
                 ConnectionAcquisitionStrategy.fromLoadBalancer(lb);
 
         final StubConnectionPool pool = new StubConnectionPool(
-                SessionProtocol.H1, 1, Collections.emptyList());
+                1, Collections.emptyList());
         pool.setNumConnections(1);
 
         final AcquisitionDecision decision = strategy.acquire(newContext(), pool);
@@ -201,15 +201,12 @@ class ConnectionAcquisitionStrategyTest {
      * Stub implementation of ConnectionPool for unit testing strategies in isolation.
      */
     private static class StubConnectionPool implements ConnectionPool {
-        private final SessionProtocol protocol;
         private final int maxNumConnections;
         private final List<Connection> allConnections;
         private int numConnections;
         private int pendingConnectionCount;
 
-        StubConnectionPool(SessionProtocol protocol, int maxNumConnections,
-                           List<Connection> connections) {
-            this.protocol = protocol;
+        StubConnectionPool(int maxNumConnections, List<Connection> connections) {
             this.maxNumConnections = maxNumConnections;
             this.allConnections = new ArrayList<>(connections);
             this.numConnections = connections.size();
@@ -244,11 +241,6 @@ class ConnectionAcquisitionStrategyTest {
         @Override
         public int pendingConnectionCount() {
             return pendingConnectionCount;
-        }
-
-        @Override
-        public SessionProtocol protocol() {
-            return protocol;
         }
 
         @Override

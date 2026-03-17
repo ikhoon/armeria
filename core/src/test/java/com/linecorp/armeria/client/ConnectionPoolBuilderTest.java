@@ -29,7 +29,8 @@ class ConnectionPoolBuilderTest {
     void defaults() {
         final ConnectionPoolBuilder builder = ConnectionPool.builder();
         assertThat(builder.maxNumConnections()).isEqualTo(ConnectionPoolBuilder.DEFAULT_MAX_NUM_CONNECTIONS);
-        assertThat(builder.acquisitionStrategy()).isNull();
+        assertThat(builder.http1AcquisitionStrategy()).isNull();
+        assertThat(builder.http2AcquisitionStrategy()).isNull();
         assertThat(builder.idleTimeoutMillis()).isEqualTo(-1L);
         assertThat(builder.maxConnectionAgeMillis()).isEqualTo(-1L);
         assertThat(builder.connectionPoolListener()).isNull();
@@ -51,11 +52,46 @@ class ConnectionPoolBuilderTest {
     }
 
     @Test
-    void acquisitionStrategy() {
+    void http1AcquisitionStrategy() {
         final ConnectionAcquisitionStrategy strategy = ConnectionAcquisitionStrategy.ofDefault();
         final ConnectionPoolBuilder builder = ConnectionPool.builder()
-                                                            .acquisitionStrategy(strategy);
-        assertThat(builder.acquisitionStrategy()).isSameAs(strategy);
+                                                            .http1AcquisitionStrategy(strategy);
+        assertThat(builder.http1AcquisitionStrategy()).isSameAs(strategy);
+    }
+
+    @Test
+    void http2AcquisitionStrategy() {
+        final ConnectionAcquisitionStrategy strategy = ConnectionAcquisitionStrategy.ofDefault();
+        final ConnectionPoolBuilder builder = ConnectionPool.builder()
+                                                            .http2AcquisitionStrategy(strategy);
+        assertThat(builder.http2AcquisitionStrategy()).isSameAs(strategy);
+    }
+
+    @Test
+    void resolveStrategy_bothDefault() {
+        // When neither is set, resolveStrategy should return the default singleton
+        final ConnectionPoolBuilder builder = ConnectionPool.builder();
+        final ConnectionAcquisitionStrategy resolved = builder.resolveStrategy();
+        assertThat(resolved).isSameAs(ConnectionAcquisitionStrategy.ofDefault());
+    }
+
+    @Test
+    void resolveStrategy_onlyHttp1Set() {
+        final ConnectionAcquisitionStrategy h1Strategy = (ctx, pool) -> AcquisitionDecision.createNew();
+        final ConnectionPoolBuilder builder = ConnectionPool.builder()
+                                                            .http1AcquisitionStrategy(h1Strategy);
+        final ConnectionAcquisitionStrategy resolved = builder.resolveStrategy();
+        // Should return a ProtocolDispatchingStrategy
+        assertThat(resolved).isInstanceOf(ProtocolDispatchingStrategy.class);
+    }
+
+    @Test
+    void resolveStrategy_onlyHttp2Set() {
+        final ConnectionAcquisitionStrategy h2Strategy = (ctx, pool) -> AcquisitionDecision.createNew();
+        final ConnectionPoolBuilder builder = ConnectionPool.builder()
+                                                            .http2AcquisitionStrategy(h2Strategy);
+        final ConnectionAcquisitionStrategy resolved = builder.resolveStrategy();
+        assertThat(resolved).isInstanceOf(ProtocolDispatchingStrategy.class);
     }
 
     @Test
