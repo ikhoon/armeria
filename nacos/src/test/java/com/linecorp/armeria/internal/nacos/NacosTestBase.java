@@ -56,7 +56,7 @@ public abstract class NacosTestBase {
     protected static final String NACOS_AUTH_SECRET = "nacos";
     @Container
     static final GenericContainer nacosContainer =
-            new GenericContainer(DockerImageName.parse("nacos/nacos-server:v2.3.0-slim"))
+            new GenericContainer(DockerImageName.parse("nacos/nacos-server:v3.2.0-slim"))
                     .withExposedPorts(8848)
                     .withEnv("MODE", "standalone")
                     .withEnv("NACOS_AUTH_ENABLE", "true")
