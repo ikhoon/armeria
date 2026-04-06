@@ -41,14 +41,13 @@ import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.util.CompletionActions;
-import com.linecorp.armeria.internal.testing.FlakyTest;
 import com.linecorp.armeria.server.AbstractHttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
 
 /**
  * A helper class for testing with Nacos.
  */
-@FlakyTest
+//@FlakyTest
 @Testcontainers(disabledWithoutDocker = true)
 public abstract class NacosTestBase {
 
