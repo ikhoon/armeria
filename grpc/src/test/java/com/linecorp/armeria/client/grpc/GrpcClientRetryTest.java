@@ -35,6 +35,8 @@ import com.google.protobuf.ByteString;
 import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.client.ClientRequestContextCaptor;
 import com.linecorp.armeria.client.Clients;
+import com.linecorp.armeria.client.retry.Backoff;
+import com.linecorp.armeria.client.retry.RetryDecision;
 import com.linecorp.armeria.client.retry.RetryRule;
 import com.linecorp.armeria.client.retry.RetryRuleWithContent;
 import com.linecorp.armeria.client.retry.RetryingClient;
@@ -301,6 +303,25 @@ final class GrpcClientRetryTest {
         await().untilTrue(completed);
         assertThat(responses).containsExactly("12345", "67890");
         assertThat(retryCounter).hasValue(3);
+    }
+
+    @Test
+    void retry_unary_successFunction() {
+        final RetryRule retryRule = (ctx, cause) -> ctx.log().whenComplete().thenApply(log -> {
+            final boolean success = ctx.options().successFunction().isSuccess(ctx, log);
+            if (success) {
+                return RetryDecision.noRetry();
+            } else {
+                return RetryDecision.retry(Backoff.ofDefault());
+            }
+        });
+        final TestServiceBlockingStub client =
+                GrpcClients.builder(server.httpUri())
+                           .decorator(RetryingClient.newDecorator(retryRule))
+                           .build(TestServiceBlockingStub.class);
+        final SimpleResponse result = client.unaryCall(SimpleRequest.getDefaultInstance());
+        assertThat(result.getUsername()).isEqualTo("my name");
+        assertThat(retryCounter).hasValue(1);
     }
 
     private static RetryRuleWithContent<HttpResponse> retryRuleWithContent() {
