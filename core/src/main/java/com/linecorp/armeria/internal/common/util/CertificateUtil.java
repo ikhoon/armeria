@@ -58,28 +58,39 @@ public final class CertificateUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CertificateUtil.class);
 
+    // A sentinel cached for a certificate without a hostname, because Caffeine does not cache null
+    // loader results. `weakKeys()` compares keys by identity, so a different instance of an equal
+    // certificate computes and logs once again.
+    private static final String NO_HOSTNAME = "";
+
     private static final LoadingCache<X509Certificate, String> hostnameCache =
             Caffeine.newBuilder()
                     .weakKeys()
                     .build(cert -> {
                         try {
                             final String san = extractSubjectAlternativeName(cert);
-                            if (san != null) {
+                            if (san != null && !san.isEmpty()) {
                                 return san;
                             }
                             final String commonName = extractCommonName(cert);
-                            if (commonName != null) {
+                            if (commonName != null && !commonName.isEmpty()) {
                                 return commonName;
                             }
 
-                            // Public root CA certificates may not have both CN and SAN.
-                            logger.debug("No common name or subject alternative name found " +
-                                        "in certificate: {}", cert);
-                            return null;
+                            // Public root CA certificates may have neither a CN nor a SAN.
+                            // Fall back to the subject DN so that such certificates are still
+                            // distinguishable in metrics.
+                            final String subjectDn = cert.getSubjectX500Principal().getName();
+                            if (!subjectDn.isEmpty()) {
+                                return subjectDn;
+                            }
+
+                            logger.debug("No subject alternative name, common name or subject " +
+                                         "distinguished name found in certificate: {}", cert);
+                            return NO_HOSTNAME;
                         } catch (Exception e) {
-                            logger.warn("Failed to get the common name or subject alternative name name " +
-                                        "from a certificate: {}", cert, e);
-                            return null;
+                            logger.warn("Failed to get the hostname from a certificate: {}", cert, e);
+                            return NO_HOSTNAME;
                         }
                     });
 
@@ -167,7 +178,8 @@ public final class CertificateUtil {
         if (!(certificate instanceof X509Certificate)) {
             return null;
         }
-        return hostnameCache.get((X509Certificate) certificate);
+        final String hostname = hostnameCache.get((X509Certificate) certificate);
+        return NO_HOSTNAME.equals(hostname) ? null : hostname;
     }
 
     public static List<X509Certificate> toX509Certificates(File file) throws CertificateException {
