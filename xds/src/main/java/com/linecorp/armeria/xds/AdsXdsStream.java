@@ -18,6 +18,8 @@ package com.linecorp.armeria.xds;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -52,8 +54,23 @@ final class AdsXdsStream extends RefCountedStream<ParsedResources> implements Xd
     private final Set<XdsType> targetTypes;
     private final SnapshotStream<InterestedResources> interestStream;
 
+    // The version of a resource type is a property of the resources, not of the stream that carried
+    // them, so it outlives the stream it was ACKed on. The xDS protocol requires the first request of
+    // a new stream to report the last version the client saw on the previous one; the response nonce,
+    // which IS stream-scoped, stays on the per-stream object.
+    private final Map<XdsType, String> lastAckedVersions = new EnumMap<>(XdsType.class);
+
     StateCoordinator stateCoordinator() {
         return stateCoordinator;
+    }
+
+    @Nullable
+    String lastAckedVersion(XdsType type) {
+        return lastAckedVersions.get(type);
+    }
+
+    void setLastAckedVersion(XdsType type, String version) {
+        lastAckedVersions.put(type, version);
     }
 
     private int connBackoffAttempts = 1;
