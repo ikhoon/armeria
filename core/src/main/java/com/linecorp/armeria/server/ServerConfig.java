@@ -322,6 +322,14 @@ public interface ServerConfig {
     Function<? super ProxiedAddresses, ? extends InetSocketAddress> clientAddressMapper();
 
     /**
+     * Returns whether to automatically send {@code 100 Continue} and remove the {@code Expect} header.
+     *
+     * @see ServerBuilder#auto100Continue(boolean)
+     */
+    @UnstableApi
+    boolean isAuto100ContinueEnabled();
+
+    /**
      * Returns whether the response header will include default {@code "Date"} header.
      */
     boolean isDateHeaderEnabled();

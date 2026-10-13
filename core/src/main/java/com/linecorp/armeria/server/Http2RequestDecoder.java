@@ -264,6 +264,10 @@ final class Http2RequestDecoder extends Http2EventAdapter {
             return false;
         }
 
+        if (!cfg.isAuto100ContinueEnabled()) {
+            return true;
+        }
+
         // Send a '100 Continue' response.
         assert encoder != null;
         encoder.writeHeaders(0 /* unused */, streamId, CONTINUE_RESPONSE, false, method);

@@ -124,6 +124,7 @@ final class DefaultServerConfig implements ServerConfig {
     private final Function<? super ProxiedAddresses, ? extends InetSocketAddress> clientAddressMapper;
     private final boolean enableServerHeader;
     private final boolean enableDateHeader;
+    private final boolean auto100Continue;
     private final ServerErrorHandler errorHandler;
     private final Http1HeaderNaming http1HeaderNaming;
     private final DependencyInjector dependencyInjector;
@@ -161,7 +162,7 @@ final class DefaultServerConfig implements ServerConfig {
             Predicate<? super InetAddress> clientAddressTrustedProxyFilter,
             Predicate<? super InetAddress> clientAddressFilter,
             Function<? super ProxiedAddresses, ? extends InetSocketAddress> clientAddressMapper,
-            boolean enableServerHeader, boolean enableDateHeader,
+            boolean enableServerHeader, boolean enableDateHeader, boolean auto100Continue,
             ServerErrorHandler errorHandler,
             @Nullable DefaultServerTlsProvider serverTlsProvider,
             Http1HeaderNaming http1HeaderNaming,
@@ -275,6 +276,7 @@ final class DefaultServerConfig implements ServerConfig {
 
         this.enableServerHeader = enableServerHeader;
         this.enableDateHeader = enableDateHeader;
+        this.auto100Continue = auto100Continue;
 
         this.errorHandler = requireNonNull(errorHandler, "errorHandler");
         this.serverTlsProvider = serverTlsProvider;
@@ -684,6 +686,11 @@ final class DefaultServerConfig implements ServerConfig {
     }
 
     @Override
+    public boolean isAuto100ContinueEnabled() {
+        return auto100Continue;
+    }
+
+    @Override
     public boolean isServerHeaderEnabled() {
         return enableServerHeader;
     }
@@ -765,7 +772,7 @@ final class DefaultServerConfig implements ServerConfig {
                     meterRegistry(), channelOptions(), childChannelOptions(),
                     clientAddressSources(), clientAddressTrustedProxyFilter(), clientAddressFilter(),
                     clientAddressMapper(),
-                    isServerHeaderEnabled(), isDateHeaderEnabled(),
+                    isServerHeaderEnabled(), isDateHeaderEnabled(), isAuto100ContinueEnabled(),
                     dependencyInjector(), absoluteUriTransformer(), unloggedExceptionsReportIntervalMillis(),
                     serverMetrics());
         }
@@ -789,7 +796,7 @@ final class DefaultServerConfig implements ServerConfig {
             Predicate<? super InetAddress> clientAddressTrustedProxyFilter,
             Predicate<? super InetAddress> clientAddressFilter,
             Function<? super ProxiedAddresses, ? extends InetSocketAddress> clientAddressMapper,
-            boolean serverHeaderEnabled, boolean dateHeaderEnabled,
+            boolean serverHeaderEnabled, boolean dateHeaderEnabled, boolean auto100Continue,
             @Nullable DependencyInjector dependencyInjector,
             Function<? super String, String> absoluteUriTransformer,
             long unloggedExceptionsReportIntervalMillis,
@@ -883,6 +890,8 @@ final class DefaultServerConfig implements ServerConfig {
         buf.append(serverHeaderEnabled ? "enabled" : "disabled");
         buf.append(", dateHeader: ");
         buf.append(dateHeaderEnabled ? "enabled" : "disabled");
+        buf.append(", auto100Continue: ");
+        buf.append(auto100Continue);
         if (dependencyInjector != null) {
             buf.append(", dependencyInjector: ");
             buf.append(dependencyInjector);

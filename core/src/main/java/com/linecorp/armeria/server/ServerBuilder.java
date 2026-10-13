@@ -74,6 +74,7 @@ import com.google.common.net.HostAndPort;
 
 import com.linecorp.armeria.common.CommonPools;
 import com.linecorp.armeria.common.DependencyInjector;
+import com.linecorp.armeria.common.ExchangeType;
 import com.linecorp.armeria.common.Flags;
 import com.linecorp.armeria.common.Http1HeaderNaming;
 import com.linecorp.armeria.common.HttpHeaderNames;
@@ -236,6 +237,7 @@ public final class ServerBuilder implements ConnectionLevelSetters, TlsSetters,
             ProxiedAddresses::sourceAddress;
     private boolean enableServerHeader = true;
     private boolean enableDateHeader = true;
+    private boolean auto100Continue = true;
     private Http1HeaderNaming http1HeaderNaming = Http1HeaderNaming.ofDefault();
     @Nullable
     private DependencyInjector dependencyInjector;
@@ -2210,6 +2212,23 @@ public final class ServerBuilder implements ConnectionLevelSetters, TlsSetters,
     }
 
     /**
+     * Sets whether to automatically send {@code 100 Continue} and remove the {@code Expect} header.
+     * This is enabled by default.
+     *
+     * <p>When disabled, an {@link HttpService} or decorator receives {@code Expect: 100-continue}
+     * and must send either {@code 100 Continue} before waiting for the request body or a final response.
+     * Manual handling requires {@link ExchangeType#BIDI_STREAMING} so that neither the request nor
+     * the response is aggregated before the interim response can be sent. When sending a final response
+     * without reading the body over HTTP/1, close the connection using
+     * {@link ServiceRequestContext#initiateConnectionShutdown()} to prevent unsafe connection reuse.
+     */
+    @UnstableApi
+    public ServerBuilder auto100Continue(boolean auto100Continue) {
+        this.auto100Continue = auto100Continue;
+        return this;
+    }
+
+    /**
      * Sets the response header not to include default {@code "Server"} header.
      */
     public ServerBuilder disableServerHeader() {
@@ -2659,7 +2678,7 @@ public final class ServerBuilder implements ConnectionLevelSetters, TlsSetters,
                 meterRegistry, proxyProtocolMaxTlvSize, channelOptions, newChildChannelOptions,
                 childChannelPipelineCustomizer,
                 clientAddressSources, clientAddressTrustedProxyFilter, clientAddressFilter, clientAddressMapper,
-                enableServerHeader, enableDateHeader, errorHandler, serverTlsProvider,
+                enableServerHeader, enableDateHeader, auto100Continue, errorHandler, serverTlsProvider,
                 http1HeaderNaming, dependencyInjector, absoluteUriTransformer,
                 unloggedExceptionsReportIntervalMillis, ImmutableList.copyOf(shutdownSupports),
                 bossGroupFactory, new DefaultConnectionAcceptor(connectionAcceptor));

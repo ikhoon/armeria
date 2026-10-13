@@ -395,6 +395,10 @@ final class Http1RequestDecoder extends ChannelDuplexHandler {
             return false;
         }
 
+        if (!cfg.isAuto100ContinueEnabled()) {
+            return true;
+        }
+
         // Send a '100 Continue' response.
         encoder.writeHeaders(id, 1, CONTINUE_RESPONSE, false, HttpMethod.valueOf(nettyReq.method().name()));
 

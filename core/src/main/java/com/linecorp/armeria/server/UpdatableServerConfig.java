@@ -290,6 +290,11 @@ final class UpdatableServerConfig implements ServerConfig {
     }
 
     @Override
+    public boolean isAuto100ContinueEnabled() {
+        return delegate.isAuto100ContinueEnabled();
+    }
+
+    @Override
     public boolean isDateHeaderEnabled() {
         return delegate.isDateHeaderEnabled();
     }
