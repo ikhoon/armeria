@@ -29,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
@@ -37,9 +38,11 @@ import javax.net.ssl.SSLSession;
 import com.linecorp.armeria.common.ContextAwareBlockingTaskExecutor;
 import com.linecorp.armeria.common.ContextAwareEventLoop;
 import com.linecorp.armeria.common.ExchangeType;
+import com.linecorp.armeria.common.HttpHeaderNames;
 import com.linecorp.armeria.common.HttpHeaders;
 import com.linecorp.armeria.common.HttpHeadersBuilder;
 import com.linecorp.armeria.common.HttpRequest;
+import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.common.QueryParams;
 import com.linecorp.armeria.common.Request;
@@ -47,6 +50,7 @@ import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.RequestId;
 import com.linecorp.armeria.common.RequestTarget;
 import com.linecorp.armeria.common.Response;
+import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.logging.RequestLog;
@@ -114,6 +118,8 @@ public final class DefaultServiceRequestContext
     @Nullable
     private ContextAwareBlockingTaskExecutor blockingTaskExecutor;
     private long maxRequestLength;
+    @Nullable
+    private Function<ResponseHeaders, CompletableFuture<Void>> informationalHeadersWriter;
 
     @SuppressWarnings("FieldMayBeFinal") // Updated via `additionalResponseHeadersUpdater`
     private volatile HttpHeaders additionalResponseHeaders;
@@ -410,6 +416,28 @@ public final class DefaultServiceRequestContext
     public void setMaxRequestLength(long maxRequestLength) {
         checkArgument(maxRequestLength >= 0, "maxRequestLength: %s (expected: >= 0)", maxRequestLength);
         this.maxRequestLength = maxRequestLength;
+    }
+
+    public void setInformationalHeadersWriter(Function<ResponseHeaders, CompletableFuture<Void>> writer) {
+        informationalHeadersWriter = requireNonNull(writer, "writer");
+    }
+
+    @Override
+    public CompletableFuture<Void> writeInformationalHeaders(ResponseHeaders headers) {
+        requireNonNull(headers, "headers");
+        checkArgument(headers.status().isInformational() &&
+                      headers.status().code() != HttpStatus.SWITCHING_PROTOCOLS.code(),
+                      "status: %s (expected: informational status other than 101)", headers.status());
+        checkArgument(!headers.isEndOfStream(), "informational headers must not end the stream");
+        checkArgument(!headers.contains(HttpHeaderNames.CONTENT_LENGTH) &&
+                      !headers.contains(HttpHeaderNames.TRANSFER_ENCODING),
+                      "informational headers must not include content-length or transfer-encoding");
+        final Function<ResponseHeaders, CompletableFuture<Void>> writer = informationalHeadersWriter;
+        if (writer == null) {
+            return UnmodifiableFuture.exceptionallyCompletedFuture(
+                    new IllegalStateException("request context is not attached to a live request"));
+        }
+        return writer.apply(headers);
     }
 
     @Override

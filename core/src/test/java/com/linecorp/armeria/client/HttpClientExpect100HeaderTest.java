@@ -35,6 +35,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hc.core5.http2.hpack.HPackEncoder;
 import org.apache.hc.core5.util.ByteArrayBuffer;
@@ -486,6 +487,40 @@ final class HttpClientExpect100HeaderTest {
                     assertThatThrownBy(() -> req.whenComplete().join()).hasCauseInstanceOf(
                             CancelledSubscriptionException.class);
                 }
+            }
+        }
+    }
+
+    @Test
+    void switchingProtocolsDiscardsBodyWhileWaitingForContinue() throws Exception {
+        try (ServerSocket ss = new ServerSocket(0)) {
+            ss.setSoTimeout(5000);
+            final WebClient client = WebClient.builder("h1c://127.0.0.1:" + ss.getLocalPort())
+                                              .writeTimeoutMillis(5000)
+                                              .responseTimeoutMillis(5000).build();
+            final HttpRequestWriter request = HttpRequest.streaming(
+                    RequestHeaders.of(HttpMethod.POST, "/", HttpHeaderNames.EXPECT, "100-continue"));
+            final HttpResponse response = client.execute(request);
+            final CompletableFuture<AggregatedHttpResponse> aggregate = response.aggregate();
+            request.write(HttpData.ofUtf8("upload"));
+            request.close();
+            try (Socket socket = ss.accept()) {
+                socket.setSoTimeout(5000);
+                final BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+                String line;
+                do {
+                    line = reader.readLine();
+                    assertThat(line).isNotNull();
+                } while (!line.isEmpty());
+                socket.getOutputStream().write(("HTTP/1.1 101 Switching Protocols\r\n" +
+                                                "Connection: upgrade\r\nUpgrade: example\r\n\r\n")
+                                               .getBytes(StandardCharsets.US_ASCII));
+                assertThatThrownBy(() -> request.whenComplete().get(1, TimeUnit.SECONDS))
+                        .hasCauseInstanceOf(CancelledSubscriptionException.class);
+            } finally {
+                response.abort();
+                aggregate.cancel(false);
             }
         }
     }

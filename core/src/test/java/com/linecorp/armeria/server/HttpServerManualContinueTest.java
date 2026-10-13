@@ -24,39 +24,31 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 
 import com.linecorp.armeria.client.WebClient;
 import com.linecorp.armeria.common.AggregatedHttpResponse;
+import com.linecorp.armeria.common.ExchangeType;
 import com.linecorp.armeria.common.HttpData;
 import com.linecorp.armeria.common.HttpHeaderNames;
 import com.linecorp.armeria.common.HttpMethod;
-import com.linecorp.armeria.common.HttpObject;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
-import com.linecorp.armeria.common.HttpResponseWriter;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.common.SessionProtocol;
-import com.linecorp.armeria.common.stream.StreamMessage;
 import com.linecorp.armeria.testing.junit5.server.ServerExtension;
 
 class HttpServerManualContinueTest {
@@ -85,7 +77,17 @@ class HttpServerManualContinueTest {
                 return continueThenServe(HttpServerManualContinueTest::storeUpload, ctx, req);
             });
 
-            final HttpService uploadService = HttpServerManualContinueTest::storeUpload;
+            final HttpService uploadService = new HttpService() {
+                @Override
+                public ExchangeType exchangeType(RoutingContext routingContext) {
+                    return ExchangeType.REQUEST_STREAMING;
+                }
+
+                @Override
+                public HttpResponse serve(ServiceRequestContext ctx, HttpRequest req) {
+                    return storeUpload(ctx, req);
+                }
+            };
             sb.service("/decorated-upload", uploadService.decorate(uploadAdmissionDecorator()));
         }
     };
@@ -117,18 +119,15 @@ class HttpServerManualContinueTest {
             return service.serve(ctx, req);
         }
 
-        final HttpResponseWriter informational = HttpResponse.streaming();
-        informational.write(continueHeaders);
-        final CompletableFuture<HttpResponse> response = informational.whenConsumed().thenApply(
-                ctx.makeContextAware(unused -> {
+        final CompletableFuture<HttpResponse> response = ctx.writeInformationalHeaders(continueHeaders)
+                .thenApplyAsync(unused -> {
                     try {
                         return service.serve(ctx, req);
                     } catch (Exception cause) {
                         return HttpResponse.ofFailure(cause);
                     }
-                }));
-        informational.close();
-        return HttpResponse.of(StreamMessage.concat(informational, HttpResponse.of(response)));
+                }, ctx.eventLoop());
+        return HttpResponse.of(response);
     }
 
     private static HttpResponse storeUpload(ServiceRequestContext ctx, HttpRequest req) {
@@ -316,60 +315,6 @@ class HttpServerManualContinueTest {
                                                          .execute(request).aggregate().join();
         assertThat(response.status()).isEqualTo(HttpStatus.LENGTH_REQUIRED);
         assertThat(response.informationals()).isEmpty();
-    }
-
-    @Test
-    void publishesInformationalHeaderBeforeInvokingDelegate() throws Exception {
-        final HttpRequest req = HttpRequest.of(
-                RequestHeaders.of(HttpMethod.POST, "/upload", HttpHeaderNames.EXPECT, expectation),
-                HttpData.ofUtf8("upload"));
-        final ServiceRequestContext ctx = ServiceRequestContext.of(req);
-        final AtomicInteger delegateCalls = new AtomicInteger();
-        final HttpService service = (unusedCtx, unusedReq) -> {
-            assertThat(ServiceRequestContext.current()).isSameAs(ctx);
-            delegateCalls.incrementAndGet();
-            return HttpResponse.of(HttpStatus.CREATED);
-        };
-        final HttpResponse response = uploadAdmissionDecorator().serve(service, ctx, req);
-        assertThat(delegateCalls).hasValue(0);
-        final List<HttpStatus> statuses = new ArrayList<>();
-        final CompletableFuture<Void> complete = new CompletableFuture<>();
-        response.subscribe(new Subscriber<HttpObject>() {
-            @Override
-            public void onSubscribe(Subscription subscription) {
-                subscription.request(Long.MAX_VALUE);
-            }
-
-            @Override
-            public void onNext(HttpObject object) {
-                if (object instanceof ResponseHeaders) {
-                    final HttpStatus status = ((ResponseHeaders) object).status();
-                    if (status == HttpStatus.CONTINUE) {
-                        assertThat(delegateCalls).hasValue(0);
-                    }
-                    statuses.add(status);
-                } else if (object instanceof HttpData) {
-                    ((HttpData) object).close();
-                }
-            }
-
-            @Override
-            public void onError(Throwable cause) {
-                complete.completeExceptionally(cause);
-            }
-
-            @Override
-            public void onComplete() {
-                complete.complete(null);
-            }
-        });
-        try {
-            complete.get(5, TimeUnit.SECONDS);
-            assertThat(statuses).containsExactly(HttpStatus.CONTINUE, HttpStatus.CREATED);
-            assertThat(delegateCalls).hasValue(1);
-        } finally {
-            req.abort();
-        }
     }
 
     private static void assertStoredUpload(AggregatedHttpResponse response, String content) throws IOException {

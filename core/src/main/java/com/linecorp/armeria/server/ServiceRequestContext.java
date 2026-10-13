@@ -50,6 +50,7 @@ import com.linecorp.armeria.common.QueryParams;
 import com.linecorp.armeria.common.Request;
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.Response;
+import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.common.RpcRequest;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.annotation.UnstableApi;
@@ -568,6 +569,23 @@ public interface ServiceRequestContext extends RequestContext {
      * @see ContentTooLargeException
      */
     void setMaxRequestLength(long maxRequestLength);
+
+    /**
+     * Writes and flushes informational {@link ResponseHeaders} independently of the returned
+     * {@link HttpResponse}.
+     * The returned future completes when the write succeeds, or fails if the request is no longer writable
+     * or final response headers have already been written. It does not acknowledge receipt by the client.
+     *
+     * <p>To send {@code 100 Continue} before reading a request body, the service must use a request-streaming
+     * {@link ExchangeType}, such as {@link ExchangeType#REQUEST_STREAMING} or
+     * {@link ExchangeType#BIDI_STREAMING}.
+     *
+     * @throws IllegalArgumentException if the status is not informational, is {@code 101 Switching Protocols},
+     *                                  the headers indicate end of stream, or they include
+     *                                  {@code Content-Length} or {@code Transfer-Encoding}
+     */
+    @UnstableApi
+    CompletableFuture<Void> writeInformationalHeaders(ResponseHeaders headers);
 
     /**
      * Returns the {@link HttpHeaders} which will be included when a {@link Service} sends an

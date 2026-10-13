@@ -34,6 +34,7 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.common.QueryParams;
 import com.linecorp.armeria.common.RequestContextWrapper;
+import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.annotation.UnstableApi;
 import com.linecorp.armeria.common.util.TimeoutMode;
@@ -204,6 +205,11 @@ public class ServiceRequestContextWrapper
     @Override
     public void setMaxRequestLength(long maxRequestLength) {
         unwrap().setMaxRequestLength(maxRequestLength);
+    }
+
+    @Override
+    public CompletableFuture<Void> writeInformationalHeaders(ResponseHeaders headers) {
+        return unwrap().writeInformationalHeaders(headers);
     }
 
     @Override

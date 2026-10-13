@@ -60,7 +60,9 @@ import com.linecorp.armeria.common.ResponseHeadersBuilder;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.ShuttingDownException;
 import com.linecorp.armeria.common.annotation.Nullable;
+import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.common.logging.RequestLogBuilder;
+import com.linecorp.armeria.common.logging.RequestLogProperty;
 import com.linecorp.armeria.common.metric.NoopMeterRegistry;
 import com.linecorp.armeria.common.stream.ClosedStreamException;
 import com.linecorp.armeria.common.stream.SubscriptionOption;
@@ -441,6 +443,8 @@ final class HttpServerHandler extends ChannelInboundHandlerAdapter implements Ht
                 nextRequestId(routingCtx, serviceCfg), routingCtx, routingResult, req.exchangeType(),
                 req, sslSession, proxiedAddresses, clientAddress, connectionContext,
                 req.requestStartTimeNanos(), req.requestStartTimeMicros(), serviceCfg.contextHook());
+        reqCtx.setInformationalHeadersWriter(informational -> writeInformationalHeaders(ctx, req, reqCtx,
+                                                                                     informational));
 
         HttpResponse res;
         req.init(reqCtx);
@@ -514,6 +518,54 @@ final class HttpServerHandler extends ChannelInboundHandlerAdapter implements Ht
             res.aggregate(AggregationOptions.usePooledObjects(ctx.alloc(), channelEventLoop))
                .handle(resHandler);
         }
+    }
+
+    private CompletableFuture<Void> writeInformationalHeaders(
+            ChannelHandlerContext ctx, DecodedHttpRequest req, DefaultServiceRequestContext reqCtx,
+            ResponseHeaders headers) {
+        final ServerHttpObjectEncoder encoder = responseEncoder;
+        assert encoder != null;
+        final CompletableFuture<Void> result = new CompletableFuture<>();
+        final Runnable write = () -> {
+            final RequestLog log = reqCtx.log().getIfAvailable(RequestLogProperty.RESPONSE_HEADERS);
+            if ((log != null && log.responseHeaders().status().code() >= 200) ||
+                encoder.isResponseHeadersSent(req.id(), req.streamId())) {
+                result.completeExceptionally(
+                        new IllegalStateException("final response headers already written"));
+                return;
+            }
+            if (!encoder.isWritable(req.id(), req.streamId())) {
+                result.completeExceptionally(protocol.isMultiplex() ? ClosedStreamException.get()
+                                                                    : ClosedSessionException.get());
+                return;
+            }
+            try {
+                reqCtx.logBuilder().startResponse();
+                final ChannelFuture future = encoder.writeHeaders(req.id(), req.streamId(), headers, false,
+                                                                  req.method());
+                ctx.flush();
+                future.addListener(f -> {
+                    if (f.isSuccess()) {
+                        reqCtx.logBuilder().responseFirstBytesTransferred();
+                        result.complete(null);
+                    } else {
+                        result.completeExceptionally(f.cause());
+                    }
+                });
+            } catch (Exception cause) {
+                result.completeExceptionally(cause);
+            }
+        };
+        try {
+            if (ctx.executor().inEventLoop()) {
+                write.run();
+            } else {
+                ctx.executor().execute(write);
+            }
+        } catch (Exception cause) {
+            result.completeExceptionally(cause);
+        }
+        return result;
     }
 
     private void decreasePendingRequests() {

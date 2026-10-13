@@ -2217,8 +2217,8 @@ public final class ServerBuilder implements ConnectionLevelSetters, TlsSetters,
      *
      * <p>When disabled, an {@link HttpService} or decorator receives {@code Expect: 100-continue}
      * and must send either {@code 100 Continue} before waiting for the request body or a final response.
-     * Manual handling requires {@link ExchangeType#BIDI_STREAMING} so that neither the request nor
-     * the response is aggregated before the interim response can be sent. When sending a final response
+     * Use {@link ServiceRequestContext#writeInformationalHeaders(ResponseHeaders)} with a request-streaming
+     * {@link ExchangeType} to send the interim response before reading the body. When sending a final response
      * without reading the body over HTTP/1, close the connection using
      * {@link ServiceRequestContext#initiateConnectionShutdown()} to prevent unsafe connection reuse.
      */

@@ -288,7 +288,8 @@ abstract class AbstractHttpRequestHandler implements ChannelFutureListener {
             state = State.NEEDS_DATA_OR_TRAILERS;
             resume();
             // TODO(minwoox): reset the timeout
-        } else {
+        } else if (responseHeaders.status().code() == HttpStatus.SWITCHING_PROTOCOLS.code() ||
+                   !responseHeaders.status().isInformational()) {
             // We do not retry the request when HttpStatus.EXPECTATION_FAILED is received
             // because:
             // - Most servers support 100-continue.
