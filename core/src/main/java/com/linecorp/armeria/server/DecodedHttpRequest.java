@@ -26,7 +26,6 @@ import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.util.SystemInfo;
 import com.linecorp.armeria.internal.common.InboundTrafficController;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoop;
 
@@ -35,7 +34,7 @@ interface DecodedHttpRequest extends HttpRequest {
     static DecodedHttpRequest of(boolean endOfStream, EventLoop eventLoop, int id, int streamId,
                                  RequestHeaders headers, boolean keepAlive,
                                  InboundTrafficController inboundTrafficController,
-                                 RoutingContext routingCtx) {
+                                 RoutingContext routingCtx, boolean expectsContinue) {
         final long requestStartTimeNanos = System.nanoTime();
         final long requestStartTimeMicros = SystemInfo.currentTimeMicros();
         if (!routingCtx.hasResult()) {
@@ -51,7 +50,7 @@ interface DecodedHttpRequest extends HttpRequest {
                         eventLoop, id, streamId, headers, keepAlive, routingCtx, exchangeType,
                         requestStartTimeNanos, requestStartTimeMicros);
             } else {
-                if (exchangeType.isRequestStreaming()) {
+                if (exchangeType.isRequestStreaming() || expectsContinue) {
                     return new StreamingDecodedHttpRequest(
                             eventLoop, id, streamId, headers, keepAlive, inboundTrafficController,
                             config.maxRequestLength(), routingCtx, exchangeType,

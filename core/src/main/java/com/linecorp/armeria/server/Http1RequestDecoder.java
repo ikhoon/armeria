@@ -277,7 +277,7 @@ final class Http1RequestDecoder extends ChannelDuplexHandler {
 
                     final boolean endOfStream = contentEmpty && !transferEncodingChunked;
                     this.req = req = DecodedHttpRequest.of(endOfStream, eventLoop, id, 1, headers,
-                                                           keepAlive, inboundTrafficController, routingCtx);
+                                                           keepAlive, inboundTrafficController, routingCtx, expectsContinue);
                     if (expectsContinue) {
                         final HttpMethod reqMethod = headers.method();
                         final int reqId = req.id();

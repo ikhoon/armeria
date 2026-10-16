@@ -211,7 +211,7 @@ final class Http2RequestDecoder extends Http2EventAdapter {
             final int id = streamIdToId(streamId);
             final EventLoop eventLoop = ctx.channel().eventLoop();
             req = DecodedHttpRequest.of(endOfStream, eventLoop, id, streamId, headers, true,
-                                        inboundTrafficController, routingCtx);
+                                        inboundTrafficController, routingCtx, expectsContinue);
             if (expectsContinue) {
                 final ServerHttpObjectEncoder enc = encoder;
                 final HttpMethod reqMethod = method;
